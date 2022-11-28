@@ -3,7 +3,7 @@ API to POSTDATAs infrastructure
 
 https://postdata.linhd.uned.es
 
-We will adapt the Dracor frontend to make it ready to show a very limited dracor-like view of poetic corpora. 
+We will adapt the [Dracor frontend](https://github.com/dracor-org/dracor-frontend) to make it ready to show a very limited dracor-like view of poetic corpora. 
 
 Generic API:
 * List corpora
