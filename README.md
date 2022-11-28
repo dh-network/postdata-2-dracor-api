@@ -11,3 +11,7 @@ Generic API:
 * Get details of poem
 
 POSTDATAs data is stored in Triple Store [Stardog](https://www.stardog.com/get-started/). We need to develop a middle wear that sends SPARQL queries to the backend and exposes a REST API.
+
+
+SPARQL Queries currently available: https://github.com/linhd-postdata/knowledge-graph-queries
+Triple Store: https://github.com/linhd-postdata/postdata-stardog
