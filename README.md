@@ -1,4 +1,4 @@
-# postdata-api
+# postdata-2-dracor-api
 API to POSTDATAs infrastructure
 
 https://postdata.linhd.uned.es
