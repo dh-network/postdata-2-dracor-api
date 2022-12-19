@@ -1,0 +1,12 @@
+{
+    "server" : {
+        "protocol" : "http" ,
+        "url" : "localhost",
+        "port" : "5820" ,
+        "database" : "PD_KG" ,
+        "credentials" : {
+            "user": "admin",
+            "password": "admin"
+        }
+    } 
+}
