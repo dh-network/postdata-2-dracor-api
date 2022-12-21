@@ -33,13 +33,13 @@ api = flask.Flask(__name__)
 api.config["JSON_AS_ASCII"] = False
 
 
-@api.route("/api", methods=["GET"])
+@api.route("/", methods=["GET"])
 def swagger_ui():
     """Displays the OpenAPI Documentation of the API"""
     return send_from_directory("static/swagger-ui", "index.html")
 
 
-@api.route("/api/info", methods=["GET"])
+@api.route("/info", methods=["GET"])
 def get_info():
     """Information about the API
     ---

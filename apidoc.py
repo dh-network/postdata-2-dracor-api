@@ -32,15 +32,15 @@ Middleware to connect POSTDATA to a DraCor-like frontend.""",
     servers=[
         dict(
             description="Local Flask",
-            url="http://127.0.0.1:5000"
+            url="http://localhost:5000"
         ),
         dict(
             description="Production",
-            url="https://poecor.org"
+            url="https://poecor.org/api"
         ),
         dict(
             description="Staging",
-            url="https://staging.poecor.org"
+            url="https://staging.poecor.org/api"
         )
     ],
     externalDocs=dict(
