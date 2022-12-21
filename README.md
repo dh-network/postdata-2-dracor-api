@@ -15,3 +15,8 @@ POSTDATAs data is stored in Triple Store [Stardog](https://www.stardog.com/get-s
 
 SPARQL Queries currently available: https://github.com/linhd-postdata/knowledge-graph-queries
 Triple Store: https://github.com/linhd-postdata/postdata-stardog
+
+
+`python3 -m venv venv`
+`source venv/bin/activate`
+`pip3 freeze > requirements.txt`
