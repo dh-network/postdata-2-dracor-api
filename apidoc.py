@@ -2,8 +2,6 @@ from marshmallow import Schema, fields
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
-import json
-from api import this_service_url, this_server_desc, api, get_info
 
 
 class InfoResponse(Schema):
@@ -13,13 +11,6 @@ class InfoResponse(Schema):
     name = fields.Str()
     version = fields.Str()
 
-
-# construct the currently running server object for the OpenAPI Documentation:
-# if running in docker, .env will be evaluated
-this_service_server_desc = dict(
-        description=this_server_desc,
-        url=this_service_url
-)
 
 spec = APISpec(
     title="Poecor POSTDATA connector",
@@ -39,7 +30,10 @@ Middleware to connect POSTDATA to a DraCor-like frontend.""",
         )
     ),
     servers=[
-        this_service_server_desc,
+        dict(
+            description="Local Flask",
+            url="http://127.0.0.1:5000"
+        ),
         dict(
             description="Production",
             url="https://poecor.org"
@@ -55,19 +49,3 @@ Middleware to connect POSTDATA to a DraCor-like frontend.""",
     ),
     plugins=[FlaskPlugin(), MarshmallowPlugin()]
 )
-
-
-def generate_apidoc():
-    """Generate the Open API Documentation.
-    Writes YAML openapi.yaml to root directory and openapi.json to the Swagger UI folder in /static
-    """
-    with api.test_request_context():
-        spec.path(view=get_info)
-
-    # write the OpenAPI specification as YAML
-    with open("openapi.yaml", "w") as yaml_file:
-        yaml_file.write(spec.to_yaml())
-
-    # Write the OpenAPI as JSON to the static swagger dictionary
-    with open("static/swagger-ui/openapi.json", "w") as json_file:
-        json.dump(spec.to_dict(), json_file)

@@ -1,7 +1,8 @@
 import flask
 from flask import jsonify, Response, send_from_directory
-from apidoc import generate_apidoc, InfoResponse
+from apidoc import InfoResponse, spec
 import os
+import json
 
 
 # Setup using environment variables: This can be used to configure the service when running in Docker
@@ -26,25 +27,13 @@ else:
     debug = True
 
 
-this_server_desc = str(os.environ.get("OPENAPI_SERVER_DESC", "local flask development"))
-"""OPENAPI_SERVER_DESC: description that is used to describe the server in the openapi documentation
-"""
-
-# get cleaned service url, depending, if the port works or not
-if ":" + str(port) in service_url:
-    # port is also in the url
-    this_service_url = service_url
-else:
-    this_service_url = service_url + ":" + str(port)
-
-
 # Setup of flask API
 api = flask.Flask(__name__)
 # enable UTF-8 support
 api.config["JSON_AS_ASCII"] = False
 
 
-@api.route("/", methods=["GET"])
+@api.route("/api", methods=["GET"])
 def swagger_ui():
     """Displays the OpenAPI Documentation of the API"""
     return send_from_directory("static/swagger-ui", "index.html")
@@ -64,11 +53,20 @@ def get_info():
                     application/json:
                         schema: InfoResponse
     """
-    pass
+    return jsonify({"status": "OK"})
 
 
-# Generate the Documentation:
-generate_apidoc()
+# Generate the OpenAPI Specification
+with api.test_request_context():
+    spec.path(view=get_info)
+
+# write the OpenAPI Specification as YAML to the root folder
+with open('openapi.yaml', 'w') as f:
+    f.write(spec.to_yaml())
+
+# Write the Specification to the /static folder to use in the Swagger UI
+with open('static/swagger-ui/openapi.json', 'w') as f:
+    json.dump(spec.to_dict(), f)
 
 # Run the Service:
 api.run(debug=debug, host='0.0.0.0', port=port)
