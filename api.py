@@ -7,8 +7,7 @@ import json
 
 # Setup using environment variables: This can be used to configure the service when running in Docker
 
-
-service_url = str(os.environ.get("SERVICE_URL", "http://127.0.0.1"))
+service_url = str(os.environ.get("SERVICE_URL", "http://localhost"))
 """SERVICE_URL: url where the service can be accessed.
 Normally, it's somehow set when running the flask dev server
 but it needs to be adapted, when one wants to access the docker container
@@ -46,6 +45,7 @@ def get_info():
     get:
         summary: About the service
         description: Returns information about the service's API
+        operationId: get_info
         responses:
             200:
                 description: Information about the API
@@ -57,6 +57,8 @@ def get_info():
 
 
 # Generate the OpenAPI Specification
+# This can not be moved to the apidoc module,
+# because to generate the Documentation, we need the flask API to be runnable
 with api.test_request_context():
     spec.path(view=get_info)
 
