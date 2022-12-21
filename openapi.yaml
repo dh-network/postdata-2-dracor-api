@@ -2,7 +2,6 @@ info:
   description: '
 
     Middleware to connect POSTDATA to a DraCor-like frontend.'
-  version: '1.0'
   contact:
     name: "Ingo B\xF6rner"
     email: ingo.boerner@uni-potsdam.de
@@ -10,6 +9,7 @@ info:
     name: GPL-3.0 license
     url: https://www.gnu.org/licenses/gpl-3.0.html
   title: Poecor POSTDATA connector
+  version: '1.0'
 servers:
 - description: Local Flask
   url: http://localhost:5000
@@ -25,6 +25,7 @@ paths:
     get:
       summary: About the service
       description: Returns information about the service's API
+      operationId: get_info
       responses:
         '200':
           description: Information about the API
@@ -43,6 +44,4 @@ components:
         name:
           type: string
         description:
-          type: string
-        baseurl:
           type: string

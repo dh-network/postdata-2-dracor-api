@@ -6,10 +6,9 @@ from apispec_webframeworks.flask import FlaskPlugin
 
 class InfoResponse(Schema):
     """Schema of the response of the 'api/info' endpoint"""
-    baseurl = fields.Str()
-    description = fields.Str()
     name = fields.Str()
     version = fields.Str()
+    description = fields.Str()
 
 
 spec = APISpec(
@@ -19,7 +18,6 @@ spec = APISpec(
     info=dict(
         description="""
 Middleware to connect POSTDATA to a DraCor-like frontend.""",
-        version="1.0",
         contact=dict(
             name="Ingo Börner",
             email="ingo.boerner@uni-potsdam.de"

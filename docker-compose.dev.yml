@@ -1,6 +1,6 @@
 version: '2'
 services:
-  catch-protagonist:
+  api:
     image: "poecor/postdata-2-dracor-api"
     build:
       context: .
