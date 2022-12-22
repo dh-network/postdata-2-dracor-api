@@ -1,6 +1,7 @@
 import flask
 from flask import jsonify, Response, send_from_directory
 from apidoc import InfoResponse, spec
+from triplestore import DB
 import os
 import json
 
@@ -60,6 +61,18 @@ triplestore_pwd = os.environ.get("PD_PASSWORD", "admin")
 """
 
 
+# Establish a connection to the Triple Store with the designated class "DB"
+# TODO: test, if the connection was successfully established. Although, the __init__ will raise an error
+db = DB(
+    triplestore=triplestore_name,
+    protocol=triplestore_protocol,
+    url=triplestore_url,
+    port=str(triplestore_port),
+    username=triplestore_user,
+    password=triplestore_pwd,
+    database=triplestore_db)
+
+
 # Setup of flask API
 api = flask.Flask(__name__)
 # enable UTF-8 support
@@ -75,6 +88,8 @@ def swagger_ui():
 @api.route("/info", methods=["GET"])
 def get_info():
     """Information about the API
+
+    TODO: add information on the current database connection.
     ---
     get:
         summary: About the service
