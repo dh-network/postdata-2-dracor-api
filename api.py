@@ -6,6 +6,9 @@ from core import inject
 import os
 import json
 
+#Queries
+from pd_stardog_queries import AuthorsOfPoem
+
 
 # Setup using environment variables: This can be used to configure the service when running in Docker
 service_version = str(os.environ.get("SERVICE_VERSION", "0.0"))

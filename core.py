@@ -1,5 +1,5 @@
 
-
+# TODO: Maybe make this a method of a query class. Evaluate, if it's still needed.
 def inject(
         query: str,
         uris: list,
