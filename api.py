@@ -2,6 +2,7 @@ import flask
 from flask import jsonify, Response, send_from_directory
 from apidoc import InfoResponse, spec
 from triplestore import DB
+from core import inject
 import os
 import json
 
