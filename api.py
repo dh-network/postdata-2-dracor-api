@@ -2,11 +2,10 @@ import flask
 from flask import jsonify, Response, send_from_directory
 from apidoc import InfoResponse, spec
 from sparql import DB
-from core import inject
 import os
 import json
 
-#Queries
+# Queries
 from pd_stardog_queries import AuthorsOfPoem
 
 
