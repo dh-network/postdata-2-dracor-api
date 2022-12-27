@@ -90,7 +90,10 @@ class SparqlQuery:
         state (str): State of the query. Defaults to "new". Other values are "prepared" (ready to be executed),
             "executed" (results available).
         uri_inject_prefix (str): Prefix of the variables used in the template. Defaults to "$".
-        prefixes_included (bool): Flag that indicates if the prefixes have already been included.
+        query_includes_prefixes (bool): Flag that indicates if the prefixes have already been included in the query.
+        template_includes_variables (bool): Flag that indicates that there are variables in the template.
+        query_includes_variables (bool): Flag that indicates if variables are included in the query. Need to remove them
+            before executing the query.
         results: Results of the query. Defaults to None.
         template (str): SPARQL query template. SPARQL query which might contain placeholders/variables, that need to be
             "prepared": e.g. inject variables, add prefix declarations – See method prepare().
@@ -103,24 +106,49 @@ class SparqlQuery:
         variables (list, optional): Variables. If the query uses any, they should be specified.
     """
 
-    # "Prepared" query: this is the current version of the query that will be executed
-    query = None
-
     # State of the query
     state = "new"
 
-    # Flag that indicates if prefixes have been injected
-    prefixes_included = False
+    # "Prepared" query: this is the current version of the query that will be executed
+    query = None
+
+    # query template
+    template = None
+
+    # Label of the query
+    label = None
+
+    # description of the query
+    description = None
+
+    # Prefixes: (might need to add them to the query if they are not in the template)
+    prefixes = None
 
     # Prefix of the placeholder to be replaced by the "inject" functions when replacing uris
     uri_inject_prefix = "$"
 
+    # variables
+    variables = None
+
     # results of the query:
     results = None
 
+    # Flags:
+
+    # Flag that indicates if prefixes have been injected into the query
+    query_includes_prefixes = False
+
+    # Flag that indicates if the query contains variable references and is therefore not executable. Defaults to None,
+    # because we don't know.
+    query_includes_variables = None
+
+    # Flag that indicates that variables are included in the template. Defaults to None because we don't know.
+    template_includes_variables = None
+
     def __init__(
             self,
-            template: str,
+            query: str = None,
+            template: str = None,
             prefixes: list = None,
             label: str = None,
             description: str = None,
@@ -130,9 +158,13 @@ class SparqlQuery:
     ):
         """Initialize query.
 
+        Will populate the attributes with the data provided in the arguments, run some checks (specify!) and –
+        in case of a template – will prepare the query.
+
         Args:
-            template (str): SPARQL query template. SPARQL query which might contain placeholders/variables, that need
-            to be "prepared": e.g. inject variables, add prefix declarations – See method prepare().
+            query (str, optional): SPARQL query. MUST not contain variables/placeholders. All prefixes MUST be declared.
+            template (str, optional): SPARQL query template. SPARQL query which might contain placeholders/variables,
+                that need to be "prepared": e.g. inject variables, add prefix declarations – See method prepare().
             prefixes (list, optional): Prefixes that need to be defined at the beginning of the query.
             label (str, optional): Label or Name of the query.
             description (str, optional): Description of the query.
@@ -145,6 +177,9 @@ class SparqlQuery:
                 initiated. Defaults to False.
         """
 
+        if query:
+            self.query = query
+
         # store the query template string
         if template:
             self.template = template
@@ -152,7 +187,8 @@ class SparqlQuery:
         if prefixes:
             # TODO: validate prefixes with SparqlPrefixItem. Evaluate if this is necessary.
             self.prefixes = prefixes
-            # TODO: add the prefixes and set self.prefixes_included to True.
+            # Assume, that the prefixes need to be added to the query
+            self.query_includes_prefixes = False
 
         if label:
             self.label = label
@@ -167,15 +203,88 @@ class SparqlQuery:
         if variables:
             self.variables = variables
 
-        # set initial state to "new"
-        self.state = "new"
+        # prepare the "query" if a template and prefixes are provided
+        if self.prefixes and self.template:
+            self.prepare()
+            # this should also set the initial state to "prepared"
+        else:
+            # set initial state to "new"
+            self.state = "new"
+
+        # run a check for variables in query:
+        if self.query:
+            self.query_includes_variables = self.check_for_variables(check="query")
+
+        # run a check for variables in template:
+        if self.template:
+            self.template_includes_variables = self.check_for_variables(check="template")
+
+        # if only query is provided and it doesn't contain variables, set it's status to "prepared":
+        # this means, it can be run
+        if self.query and self.query_includes_variables is False:
+            self.state = "prepared"
+
+        # TODO: this could issue a warning, if the checks return True and no variables are defined!
 
         if execute is True:
             # TODO: Handle the "execute" flag:
             # Execute the query from the start; set query
             raise Exception("execute flag is not implemented.")
 
-    def inject(self, uris: list):
+    def check_for_variables(self, check: str = "query") -> bool:
+        """Check if query or template contain variables.
+
+        Args:
+            check (str, optional): Target of the checking: can either check the "query" (default) or the "template".
+
+        Returns:
+            bool: True if the template or query string contains variables that use the "uri_inject_prefix".
+        """
+        if check == "template" and self.template:
+            check_string = self.query
+        elif check == "query" and self.query:
+            check_string = self.query
+        else:
+            raise Exception("Can not run check." + check + "is not available.")
+
+        # Check, if the prefix of the variable placeholder is contained in template or query
+        # TODO: Maybe use regex for more precise checking.
+        if self.uri_inject_prefix in check_string:
+            return True
+        else:
+            return False
+
+    def add_prefixes(self) -> bool:
+        """Add the prefix declarations to the query.
+
+        Returns:
+            bool: True if successful.
+        """
+        if self.prefixes is not None and self.query_includes_prefixes is False:
+            # need to add prefixes
+
+            # set up a list for the prefix declarations
+            prefix_declarations = []
+
+            for prefix_item in self.prefixes:
+                declaration = "PREFIX " + prefix_item["prefix"] + ": <" + prefix_item["uri"].strip() + ">"
+                prefix_declarations.append(declaration)
+
+            # add the prefixes before the query
+            self.query = "\n".join(prefix_declarations) + self.query
+
+            # set the flag to make clear that the prefixes where included
+            self.query_includes_prefixes = True
+
+            return True
+
+        else:
+            # Prefixes are already included or there are none, nothing needs to be done.
+            pass
+
+    def inject(self,
+               uris: list,
+               target: str = "query") -> bool:
         """Inject URIs into the SPARQL query containing placeholders.
 
         This method takes a list of uris and replaces each occurrence of a designated pattern,
@@ -187,12 +296,18 @@ class SparqlQuery:
 
         Args:
             uris (list): List of URIs to be injected into the query.
+            target (str): Target of the injection. Can be "query" (default) or "template".
+                Injecting into "template" will overwrite a probably already prepared query.
 
         Returns:
-            str: Query with injected uris.
+            bool: True if operation was successful.
         """
-        # uses the query template
-        prepared_query = self.template
+        # uses the query template: but doesn't inject into the template but overwrites self.query
+        if self.template and target == "template":
+            prepared_query = self.template
+            # TODO: Check, if this somehow messed with the state and the flags.
+        else:
+            prepared_query = self.query
 
         # loop over uris and replace the placeholder with an uri at position n
         n = 1
@@ -205,13 +320,42 @@ class SparqlQuery:
         self.query = prepared_query
 
         # set the state of the query to "prepared", but only, if prefixes are already included.
-        if self.prefixes_included is True:
+        if self.query_includes_prefixes is True:
             self.state = "prepared"
         else:
-            # TODO: prefixes have to be added!
-            pass
+            # add the prefixes before setting the state to "prepared"
+            self.add_prefixes()
+            self.state = "prepared"
 
-        return prepared_query
+        # set the flag query_includes_variables to false, because now there are no variables left;
+        # use the designated check function for that: should be False now.
+        self.query_includes_variables = self.check_for_variables(check="query")
+
+        return True
+
+    def prepare(self) -> bool:
+        """Prepare the query for execution.
+
+        Use the template, add prefixes.
+
+        Returns:
+            bool: True if operation was successful.
+
+        """
+        # TODO: check if these conditions are sufficient
+        if self.state == "new" and self.query is None and self.template is not None:
+            # copy the template to query
+            self.query = self.template
+
+            # add prefixes.
+            # The method itself tests if the prefixes are already included by checking the flag
+            # self.query_includes_prefixes
+            self.add_prefixes()
+
+            # set the status to prepared
+            self.state = "prepared"
+
+            return True
 
     def explain(self) -> str:
         """Explain the query.
@@ -245,9 +389,10 @@ class SparqlQuery:
             bool: True indicates that the operation was successful.
 
         """
-        if self.state == "prepared":
-
-            try:
+        if self.query:
+            # can only run if we have a query, the prefixes are included (should be done by prepare())
+            # and there are no variables in the query
+            if self.state == "prepared" and self.query_includes_variables is False:
                 # use the sparql method of the supplied database
                 self.results = database.sparql(self.query)
 
@@ -256,8 +401,5 @@ class SparqlQuery:
 
                 return True
 
-            finally:
-                raise Exception("Something went wrong while executing the query.")
-
-        else:
-            pass
+            else:
+                raise Exception("The query is not prepared or contains variables that need to be replaced.")
