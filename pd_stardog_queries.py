@@ -3,6 +3,7 @@ from sparql import SparqlQuery
 """Here will all the classes = queries go that are then imported into the api
 """
 
+
 # Set globally for all SPARQL Queries against the POSTDATA's infrastructure
 class PdStardogQuery(SparqlQuery):
     """SPARQL Query to POSTDATAs Stardog
@@ -11,9 +12,7 @@ class PdStardogQuery(SparqlQuery):
     # set globally for all queries to POSTDATAs Stardog
 
     # Queries work only with the stardog implementation (because of the union graph)
-    scope = {
-        "triplestore": "stardog"
-    }
+    scope = "stardog"
 
     # Prefixes in SPARQL Queries
     prefixes = [
@@ -35,25 +34,15 @@ class PdStardogQuery(SparqlQuery):
 class AuthorsOfPoem(PdStardogQuery):
     """SPARQL Query: Author(s) of a poem"""
 
-    labels = [
-        {
-            "value": "Author(s) of a poem",
-            "lang": "en"
-        }
-    ]
+    label = "Author(s) of a Poem"
 
-    descriptions = [
-        {
-            "value": """
-                For a single poem with a "poem_uri" the query returns all URIs of "agents"
-                that have the "roleFunction" of "creator" in a relation to a "WorkConception".
-                Optionally, it returns a sample name of the author.
-            """,
-            "lang": "en"
-        }
-    ]
+    description = """
+    For a single poem with a "poem_uri" the query returns all URIs of "agents"
+    that have the "roleFunction" of "creator" in a relation to a "WorkConception".
+    Optionally, it returns a sample name of the author.
+    """
 
-    query = """
+    template = """
     SELECT ?Agent (SAMPLE(?Name) AS ?Name)  WHERE {
         <$1> a pdc:PoeticWork ;
             pdc:wasInitiatedBy ?WorkConception .
@@ -73,10 +62,9 @@ class AuthorsOfPoem(PdStardogQuery):
     variables = [
         {
             "id": "poem_uri",
-            "descriptions": [
-                {"value": "URI of a Poem",
-                 "lang": "en"}
-                ]
+            "class": "pdc:PoeticWork",
+            "description":  "URI of a Poem."
         }
     ]
+
 

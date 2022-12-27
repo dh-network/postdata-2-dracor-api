@@ -1,6 +1,5 @@
 """Module to document and handle SPARQL Queries
 """
-from marshmallow import Schema, fields
 import stardog
 
 
@@ -81,21 +80,6 @@ class DB:
         return True
 
 
-
-class SparqlPrefixItem(Schema):
-    """Schema of an item in "prefixes" of class SparqlQuery
-
-    Example:
-        Can be used to validate the a prefix item:
-
-        { "prefix" : "pdp", "uri" : "http://postdata.linhd.uned.es/ontology/postdata-poeticAnalysis#" }
-
-    TODO: reuse this schema in the class SparqlQuery
-    """
-    prefix = fields.Str()
-    uri = fields.Str()
-
-
 class SparqlQuery:
     """SPARQL Query.
 
@@ -107,6 +91,7 @@ class SparqlQuery:
             "executed" (results available).
         uri_inject_prefix (str): Prefix of the variables used in the template. Defaults to "$".
         prefixes_included (bool): Flag that indicates if the prefixes have already been included.
+        results: Results of the query. Defaults to None.
         template (str): SPARQL query template. SPARQL query which might contain placeholders/variables, that need to be
             "prepared": e.g. inject variables, add prefix declarations – See method prepare().
         prefixes (list, optional): Prefixes that need to be defined at the beginning of the query.
@@ -130,6 +115,9 @@ class SparqlQuery:
     # Prefix of the placeholder to be replaced by the "inject" functions when replacing uris
     uri_inject_prefix = "$"
 
+    # results of the query:
+    results = None
+
     def __init__(
             self,
             template: str,
@@ -152,6 +140,7 @@ class SparqlQuery:
                 e.g. "stardog" would hint that the query will work with a stardog implementation
                 (because of a special union graph that is only available with this triple store).
             variables (list, optional): Variables. If the query uses any, they should be specified.
+                E.g. {"id": "poem_uri", "class": "pdc:PoeticWork", "description":  "URI of a Poem." }
             execute (bool, optional): Execute Flag. If set to True, the query will be executed when the class instance is
                 initiated. Defaults to False.
         """
@@ -181,8 +170,10 @@ class SparqlQuery:
         # set initial state to "new"
         self.state = "new"
 
-        # TODO: Handle the "execute" flag:
-        # Execute the query from the start; set query
+        if execute is True:
+            # TODO: Handle the "execute" flag:
+            # Execute the query from the start; set query
+            raise Exception("execute flag is not implemented.")
 
     def inject(self, uris: list):
         """Inject URIs into the SPARQL query containing placeholders.
@@ -234,7 +225,7 @@ class SparqlQuery:
             explanation = self.label + ": " + self.description
             return explanation
         else:
-            return None
+            raise Exception("Can not generate explanation. No label and/or description is available.")
 
     def dump(self) -> str:
         """Gets the current version of the query.
@@ -244,15 +235,29 @@ class SparqlQuery:
         """
         return self.query
 
-    def execute(self, database):
+    def execute(self, database: DB) -> bool:
         """Execute a query.
 
         Args:
-            database: Instance of the class
+            database: Instance of the class "DB". Expects to be able to use the method
 
         Returns:
+            bool: True indicates that the operation was successful.
 
         """
+        if self.state == "prepared":
 
+            try:
+                # use the sparql method of the supplied database
+                self.results = database.sparql(self.query)
 
-    
+                # set the state to "executed"
+                self.state = "executed"
+
+                return True
+
+            finally:
+                raise Exception("Something went wrong while executing the query.")
+
+        else:
+            pass
