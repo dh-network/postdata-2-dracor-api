@@ -1,34 +1,85 @@
-"""Module to document and handle SPAQL Queries
+"""Module to document and handle SPARQL Queries
 """
 from marshmallow import Schema, fields
+import stardog
 
 
-class ValueLanguageItem(Schema):
-    """Schema of the list items of labels and descriptions of a SPARQL Query
-
-    TODO: reuse this schema in the class SparqlQuery.
+class DB:
+    """Database (Stardog) to query against. Need to be initialized with the information needed for a connection.
     """
-    # value of the item
-    value = fields.Str()
-    # iso language string, e.g. "en", "de"
-    lang = fields.Str()
+    def __init__(
+            self,
+            triplestore: str = "stardog",
+            protocol: str = "http",
+            url: str = "localhost",
+            port: str = "5820",
+            username: str = "admin",
+            password: str = "admin",
+            database: str = "PD_KG"
+    ):
+        """Initialize the Database Connection.
 
+        Args:
+            triplestore (str): Type of Triplestore. Defaults to "stardog".
+            protocol (str): Protocol. Should be ether "http"  or "https".
+            url (str): URL of the Triple Store. Defaults to "localhost".
+            port (str): Port of the Triple Store. Defaults to stardog's default port "5820".
+            username (str): Username of the Triple Store. Defaults to stardog's default user "admin".
+            password (str): Password of the Triple Store User. Defaults to stardog's default password "admin".
+            database (str): Name of the Database. Defaults to POSTDATA's database name "PD_KG".
 
-class SparqlVariableItem(Schema):
-    """Schema of an item in variables
+        Raises:
+            ConnectionError: Connection to Stardog is not possible.
+        """
+        self.triplestore = triplestore
 
-    Example:
-        Can be used to validate:
+        # Settings for stardog
+        if self.triplestore == "stardog":
 
-        {
-        "id" : "poem_uri",
-        "descriptions": [{"value": "URI of a Poem", "lang": "en"}]
-        }
+            # Connection details
+            self.connection_details = dict(
+                endpoint=protocol + "://" + url + ":" + port,
+                username=username,
+                password=password
+            )
 
-    TODO: reuse this schema in the class SparqlQuery
-    """
-    id = fields.Str()
-    #descriptions = fields.List(ValueLanguageItem)
+            # set the database
+            self.database = database
+
+            # TODO: handle an exception when connection fails.
+            self.stardog_connection = stardog.Connection(self.database, **self.connection_details)
+
+        else:
+            raise Exception("No implementation for triple store " + self.triplestore)
+
+    def sparql(self, query: str):
+        """
+        Send a SPARQL Query.
+        """
+        # only implemented for stardog
+        if self.triplestore == "stardog":
+            results = self.stardog_connection.select(query)
+            return results
+
+        # if not using stardog, we throw an exception because this is not implemented yet
+        else:
+            raise Exception("No implementation for triple store " + self.triplestore)
+
+    def connect(self):
+        """Open a (new) connection to the Database."""
+        if self.triplestore == "stardog":
+            self.stardog_connection = stardog.Connection(self.database, **self.connection_details)
+        return True
+
+    def disconnect(self):
+        """Close the connection to the Database"""
+        if self.triplestore == "stardog":
+            self.stardog_connection.__exit__()
+        else:
+            raise Exception("No implementation for triple store " + self.triplestore)
+
+        return True
+
 
 
 class SparqlPrefixItem(Schema):
@@ -49,47 +100,89 @@ class SparqlQuery:
     """SPARQL Query.
 
     A way to create a documented SPARQL query with additional functionality.
-    TODO: find out how to better document
+
+    Attributes:
+        query (str): Ready to execute query. Variables in the template are resolved, prefixes are added.
+        state (str): State of the query. Defaults to "new". Other values are "prepared" (ready to be executed),
+            "executed" (results available).
+        uri_inject_prefix (str): Prefix of the variables used in the template. Defaults to "$".
+        prefixes_included (bool): Flag that indicates if the prefixes have already been included.
+        template (str): SPARQL query template. SPARQL query which might contain placeholders/variables, that need to be
+            "prepared": e.g. inject variables, add prefix declarations – See method prepare().
+        prefixes (list, optional): Prefixes that need to be defined at the beginning of the query.
+        label (str, optional): Label or Name of the query.
+        description (str, optional): Description of the query.
+        scope (str, optional): Hints at the infrastructural/technical implementation the query is designed for.
+            e.g. "stardog" would hint that the query will work with a stardog implementation
+            (because of a special union graph that is only available with this triple store).
+        variables (list, optional): Variables. If the query uses any, they should be specified.
     """
+
+    # "Prepared" query: this is the current version of the query that will be executed
+    query = None
+
+    # State of the query
+    state = "new"
+
+    # Flag that indicates if prefixes have been injected
+    prefixes_included = False
 
     # Prefix of the placeholder to be replaced by the "inject" functions when replacing uris
     uri_inject_prefix = "$"
 
     def __init__(
             self,
-            query,
+            template: str,
             prefixes: list = None,
-            labels: list = None,
-            descriptions: list = None,
-            scope: dict = None,
-            variables: list = None
+            label: str = None,
+            description: str = None,
+            scope: str = None,
+            variables: list = None,
+            execute: bool = False
     ):
+        """Initialize query.
+
+        Args:
+            template (str): SPARQL query template. SPARQL query which might contain placeholders/variables, that need
+            to be "prepared": e.g. inject variables, add prefix declarations – See method prepare().
+            prefixes (list, optional): Prefixes that need to be defined at the beginning of the query.
+            label (str, optional): Label or Name of the query.
+            description (str, optional): Description of the query.
+            scope (str, optional): Hints at the infrastructural/technical implementation the query is designed for.
+                e.g. "stardog" would hint that the query will work with a stardog implementation
+                (because of a special union graph that is only available with this triple store).
+            variables (list, optional): Variables. If the query uses any, they should be specified.
+            execute (bool, optional): Execute Flag. If set to True, the query will be executed when the class instance is
+                initiated. Defaults to False.
         """
-        TODO: document init function of SparqlQuery
-        """
-        # store the query string
-        if query:
-            self.query = query
+
+        # store the query template string
+        if template:
+            self.template = template
 
         if prefixes:
             # TODO: validate prefixes with SparqlPrefixItem. Evaluate if this is necessary.
             self.prefixes = prefixes
+            # TODO: add the prefixes and set self.prefixes_included to True.
 
-        if labels:
-            # TODO: validate label item with ValueLanguageItem
-            self.labels = labels
+        if label:
+            self.label = label
 
-        if descriptions:
-            # TODO: validate description item with ValueLanguageItem
-            self.descriptions = descriptions
+        if description:
+            self.description = description
 
         if scope:
             # this we will see what it will be
             self.scope = scope
 
         if variables:
-            # TODO: should be validated against SparqlVariableItem
             self.variables = variables
+
+        # set initial state to "new"
+        self.state = "new"
+
+        # TODO: Handle the "execute" flag:
+        # Execute the query from the start; set query
 
     def inject(self, uris: list):
         """Inject URIs into the SPARQL query containing placeholders.
@@ -99,6 +192,7 @@ class SparqlQuery:
         $2 with the second.
         It expects, that the parts to be replaced are already enclosed in angle brackets, e.g. <$1>.
         The prefix of the placeholders/variables can be requested by checking the class attribute "uri_inject_prefix".
+        The prepared query is returned and stored in "query".
 
         Args:
             uris (list): List of URIs to be injected into the query.
@@ -106,16 +200,59 @@ class SparqlQuery:
         Returns:
             str: Query with injected uris.
         """
-        query_with_uris = self.query
+        # uses the query template
+        prepared_query = self.template
 
         # loop over uris and replace the placeholder with an uri at position n
         n = 1
         for uri in uris:
             to_replace = self.uri_inject_prefix + str(n)
-            query_with_uris = query_with_uris.replace(to_replace, uri)
+            prepared_query = prepared_query.replace(to_replace, uri)
             n = n + 1
 
-        return query_with_uris
+        # store the prepared query
+        self.query = prepared_query
 
-    # TODO: implement an explain method here class.explain() should return descriptions in a certain language.
+        # set the state of the query to "prepared", but only, if prefixes are already included.
+        if self.prefixes_included is True:
+            self.state = "prepared"
+        else:
+            # TODO: prefixes have to be added!
+            pass
+
+        return prepared_query
+
+    def explain(self) -> str:
+        """Explain the query.
+
+        Returns:
+            str: Explanation of the query containing the label and the description.
+
+        TODO: raise and exception if an explanation can not be generated because description and/or label are missing.
+        """
+        if self.description is not None and self.label is not None:
+            explanation = self.label + ": " + self.description
+            return explanation
+        else:
+            return None
+
+    def dump(self) -> str:
+        """Gets the current version of the query.
+
+        Returns:
+            str: query
+        """
+        return self.query
+
+    def execute(self, database):
+        """Execute a query.
+
+        Args:
+            database: Instance of the class
+
+        Returns:
+
+        """
+
+
     

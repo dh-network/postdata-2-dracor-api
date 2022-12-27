@@ -35,7 +35,7 @@ COPY static /api/static
 COPY apidoc.py /api
 COPY core.py  /api
 COPY queries.py /api
-COPY triplestore.py /api
+COPY sparql.py /api
 
 # configure the container to run in an executed manner
 ENTRYPOINT [ "python", "/api/api.py" ]
