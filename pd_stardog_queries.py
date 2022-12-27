@@ -1,5 +1,7 @@
 from sparql import SparqlQuery
 
+"""Here will all the classes = queries go that are then imported into the api
+"""
 
 # Set globally for all SPARQL Queries against the POSTDATA's infrastructure
 class PdStardogQuery(SparqlQuery):

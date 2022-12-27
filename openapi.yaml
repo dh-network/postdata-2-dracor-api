@@ -39,9 +39,9 @@ components:
     InfoResponse:
       type: object
       properties:
-        version:
+        description:
           type: string
         name:
           type: string
-        description:
+        version:
           type: string

@@ -116,3 +116,6 @@ class SparqlQuery:
             n = n + 1
 
         return query_with_uris
+
+    # TODO: implement an explain method here class.explain() should return descriptions in a certain language.
+    
