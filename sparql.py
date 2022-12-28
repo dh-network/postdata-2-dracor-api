@@ -414,3 +414,75 @@ class SparqlQuery:
 
             else:
                 raise Exception("The query is not prepared or contains variables that need to be replaced.")
+
+    def simplified_results(self) -> list:
+        """Transform the results to a simple representation.
+
+        The SPARQL results format is described here: https://www.w3.org/TR/sparql11-results-json/
+
+        Example of a complex result:
+            {'head': {'vars': ['Agent', 'Name']},
+            'results': {'bindings': [
+            {
+            'Agent': {'type': 'uri',
+            'value': 'http://postdata.linhd.uned.es/resource/p_juana-ines-de-la-cruz'},
+            'Name': {
+            'type': 'literal',
+            'value': 'Juana Ines de La Cruz'
+            }
+            }]}}
+
+        This is transformed to a simpler representation:
+            [
+            {
+            "Agent" : "http://postdata.linhd.uned.es/resource/p_juana-ines-de-la-cruz",
+            "Name" : "Juana Ines de La Cruz"
+            }
+            ]
+
+        The function will try to map the type to a Python datatype.
+
+        Returns:
+            list: List of item.
+        """
+        # makes sense for an executed query only that returned results
+        if self.state == "executed" and self.results is not None:
+
+            # get the variables ("vars") of the results, these will be used as keys in the data items
+            vars = self.results["head"]["vars"]
+
+            # the bindings will be transformed into the data items
+            bindings = self.results["results"]["bindings"]
+
+            # a list for the results to be returned
+            simple_results = []
+
+            # iterate over the bindings and transform the binding into a data item
+            for binding in bindings:
+
+                data_item = {}
+
+                # iterate over the variables and construct the keys
+                for var in vars:
+
+                    # evaluate the "type" to decide what datatype to use
+                    if binding[var]["type"] == "literal":
+                        value = str(binding[var]["value"])
+
+                    elif binding[var]["type"] == "uri":
+                        # transform sparql json results type uri to python string
+                        value = str(binding[var]["value"])
+
+                    # TODO: which type values can be expected.
+
+                    else:
+                        # fallback: just use whatever there is
+                        value = binding[var]["value"]
+
+                    # add the value to the data item
+                    # TODO: maybe here allow for a setting of a different key by providing mappings
+                    data_item[var] = value
+
+                simple_results.append(data_item)
+
+            return simple_results
