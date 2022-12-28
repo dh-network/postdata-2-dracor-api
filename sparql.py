@@ -415,7 +415,7 @@ class SparqlQuery:
             else:
                 raise Exception("The query is not prepared or contains variables that need to be replaced.")
 
-    def simplified_results(self) -> list:
+    def simplified_results(self, mapping: dict = None) -> list:
         """Transform the results to a simple representation.
 
         The SPARQL results format is described here: https://www.w3.org/TR/sparql11-results-json/
@@ -442,6 +442,10 @@ class SparqlQuery:
 
         The function will try to map the type to a Python datatype.
 
+        Args:
+            mapping (dict, optional): Mapping of variable names in the sparql results to key in the data item.
+                e.g. { "Agent" : {"key": "authorUri", "datatype" : "str" }, "Name" : {"key" : "authorName" ...} }
+
         Returns:
             list: List of item.
         """
@@ -465,23 +469,59 @@ class SparqlQuery:
                 # iterate over the variables and construct the keys
                 for var in vars:
 
-                    # evaluate the "type" to decide what datatype to use
-                    if binding[var]["type"] == "literal":
-                        value = str(binding[var]["value"])
+                    # if a mapping is provided, use key and expected format
+                    if mapping is not None:
 
-                    elif binding[var]["type"] == "uri":
-                        # transform sparql json results type uri to python string
-                        value = str(binding[var]["value"])
-
-                    # TODO: which type values can be expected.
+                        if var in mapping:
+                            # there is a mapping available
+                            var_map = mapping[var]
 
                     else:
-                        # fallback: just use whatever there is
-                        value = binding[var]["value"]
+                        # there is no mapping or the variable is not mapped
+                        var_map = None
+
+                    # if there is a value type provided in the mapping (var_map) use this type and
+                    # ignore the type in the result
+                    if var_map:
+                        if "datatype" in var_map:
+                            if var_map["datatype"] == "str" or var_map["datatype"] == "String":
+                                value = str(binding[var]["value"])
+
+                            elif var_map["datatype"] == "int" or var_map["datatype"] == "Integer":
+                                value = int(binding[var]["value"])
+
+                            else:
+                                # TODO: which other datatypes to use?
+                                raise Exception("Datatype in the mapping " + var_map["datatype"] + " is not expected.")
+
+                    else:
+                        # there is no type specified in the mapping, try to map the "type" of the sparql result
+                        # evaluate the "type" to decide what datatype to use
+                        if binding[var]["type"] == "literal":
+                            value = str(binding[var]["value"])
+
+                        elif binding[var]["type"] == "uri":
+                            # transform sparql json results type uri to python string
+                            value = str(binding[var]["value"])
+
+                        # TODO: which type values can be expected.
+
+                        else:
+                            raise Exception("Value type " + binding[var]["type"] + " is not expected.")
+                            # fallback: just use whatever there is
+                            #value = binding[var]["value"]
 
                     # add the value to the data item
-                    # TODO: maybe here allow for a setting of a different key by providing mappings
-                    data_item[var] = value
+                    # if there is a mapping, use the key in the mapping
+                    if var_map:
+                        if "key" in var_map:
+                            # we have a key, so use this
+                            data_item[var_map["key"]] = value
+                        else:
+                            # there is a mapping, but not of the variable name/key
+                            data_item[var] = value
+                    else:
+                        data_item[var] = value
 
                 simple_results.append(data_item)
 
