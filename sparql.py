@@ -94,7 +94,7 @@ class SparqlQuery:
         template_includes_variables (bool): Flag that indicates that there are variables in the template.
         query_includes_variables (bool): Flag that indicates if variables are included in the query. Need to remove them
             before executing the query.
-        results: Results of the query. Defaults to None.
+        results (SparqlResults): Results of the query. Uses the class "SparqlResults". Defaults to None.
         template (str): SPARQL query template. SPARQL query which might contain placeholders/variables, that need to be
             "prepared": e.g. inject variables, add prefix declarations – See method prepare().
         prefixes (list, optional): Prefixes that need to be defined at the beginning of the query.
@@ -405,8 +405,9 @@ class SparqlQuery:
             # and there are no variables in the query
             if self.state == "prepared" and self.query_includes_variables is False:
                 # use the sparql method of the supplied database
-                self.results = database.sparql(self.query)
-                # TODO: the results should be instantiated as a separate class SparqlResult
+                sparql_results = database.sparql(self.query)
+                # use SparqlResults class that provide methods to handle the returned SPARQL results json format
+                self.results = SparqlResults(sparql_results)
 
                 # set the state to "executed"
                 self.state = "executed"
@@ -416,8 +417,45 @@ class SparqlQuery:
             else:
                 raise Exception("The query is not prepared or contains variables that need to be replaced.")
 
-    def simplified_results(self, mapping: dict = None) -> list:
-        """Transform the results to a simple representation.
+
+class SparqlResults:
+    """Result of a SPARQL Query.
+
+    Provides methods to transform and serialize.
+
+    TODO: Document this.
+    """
+
+    # data that is returned for a query is stored here
+    data = None
+
+    # Variables in the head of the json
+    vars = None
+
+    # Bindings
+    bindings = None
+
+    def __init__(self, sparql_results: dict):
+        """Initialize
+
+        Args:
+            sparql_results: Response returned by a SPARQL query in SPARQL results format
+                see https://www.w3.org/TR/sparql11-results-json/
+        """
+
+        # store the data
+        self.data = sparql_results
+
+        # for easier handling, split the data into the vars in the head and the bindings in results:
+        self.vars = self.data["head"]["vars"]
+        self.bindings = self.data["results"]["bindings"]
+
+    def dump(self):
+        """Return the stored SPARQL results in SPARQL Results Format"""
+        return self.data
+
+    def simplify(self, mapping: dict = None) -> list:
+        """Get simple representation.
 
         The SPARQL results format is described here: https://www.w3.org/TR/sparql11-results-json/
 
@@ -452,14 +490,10 @@ class SparqlQuery:
 
         TODO: refactor and move results to a separate class SparqlResult
         """
-        # makes sense for an executed query only that returned results
-        if self.state == "executed" and self.results is not None:
-
-            # get the variables ("vars") of the results, these will be used as keys in the data items
-            vars = self.results["head"]["vars"]
-
-            # the bindings will be transformed into the data items
-            bindings = self.results["results"]["bindings"]
+        if self.vars and self.bindings:
+            # just that the method still works somehow
+            vars = self.vars
+            bindings = self.bindings
 
             # a list for the results to be returned
             simple_results = []
