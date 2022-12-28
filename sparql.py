@@ -155,6 +155,7 @@ class SparqlQuery:
             scope: str = None,
             variables: list = None,
             uris: list = None,
+            database: DB = None,
             execute: bool = False
     ):
         """Initialize query.
@@ -175,6 +176,8 @@ class SparqlQuery:
             variables (list, optional): Variables. If the query uses any, they should be specified.
                 E.g. {"id": "poem_uri", "class": "pdc:PoeticWork", "description":  "URI of a Poem." }
             uris (list, optional): URIs to inject into a query.
+            database (DB, optional): Instance of DB Class (working connection).
+                Is mandatory if the execute flag is set to True.
             execute (bool, optional): Execute Flag. If set to True, the query will be executed when the class instance is
                 initiated. Defaults to False.
         """
@@ -221,7 +224,7 @@ class SparqlQuery:
         if self.template:
             self.template_includes_variables = self.check_for_variables(check="template")
 
-        # if only query is provided and it doesn't contain variables, set it's status to "prepared":
+        # if only query is provided and it doesn't contain variables, set its status to "prepared":
         # this means, it can be run
         if self.query and self.query_includes_variables is False:
             self.state = "prepared"
@@ -233,9 +236,9 @@ class SparqlQuery:
             self.inject(uris, target="query")
 
         if execute is True:
-            # TODO: Handle the "execute" flag:
-            # Execute the query from the start; set query
-            raise Exception("execute flag is not implemented.")
+            # Execute the query from the start; set query; query must be prepared and must not contain variables
+            if self.state == "prepared" and self.query_includes_variables is False and database is not None:
+                self.execute(database)
 
     def check_for_variables(self, check: str = "query") -> bool:
         """Check if query or template contain variables.
