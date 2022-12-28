@@ -454,6 +454,50 @@ class SparqlResults:
         """Return the stored SPARQL results in SPARQL Results Format"""
         return self.data
 
+    def __get_solution_variable_value(self,
+                                      key: str,
+                                      value_item: dict,
+                                      mapping: dict = None):
+        """Get the value of a variable in a query solution (in a binding).
+
+        Args:
+            key (str): Key of a variable in a binding.
+            value_item (dict): Value object of a binding, e.g. {'type': 'literal', 'value': 'Juana Ines de La Cruz'}
+            mapping (dict, optional): Mapping of variable names in the sparql results to key in the data item.
+                e.g. { "Agent" : {"key": "authorUri", "datatype" : "str" }, "Name" : {"key" : "authorName" ...} }
+                All mappings are passed through. Need to select the mapping relevant for the
+                current variable.
+
+        Returns: the value
+        """
+        # Look for mappings; an explicit datatype has priority over guessed types
+        has_datatype_mapping = False
+
+        if mapping:
+            # mappings are provided, but need to check, if there is a mapping for the current variable
+            if key in mapping:
+                if "datatype" in mapping[key]:
+                    has_datatype_mapping = True
+                    datatype = mapping[key]["datatype"]
+
+        if has_datatype_mapping is True:
+            if datatype == "str" or datatype == "String":
+                value = str(value_item["value"])
+            elif datatype == "int" or datatype == "Integer":
+                value = int(value_item["value"])
+            else:
+                raise Exception("Mapping for datatype " + datatype + "is not available.")
+
+        else:
+            # there is no explicit mapping, evaluate "type" of the value item
+            if value_item["type"] == "uri" or value_item["type"] == "literal":
+                value = str(value_item["value"])
+            # TODO: what other types are possible?
+            else:
+                raise Exception("Mapping for value type " + value_item["type"] + " is not available.")
+
+        return value
+
     def simplify(self, mapping: dict = None) -> list:
         """Get simple representation.
 
@@ -486,125 +530,44 @@ class SparqlResults:
                 e.g. { "Agent" : {"key": "authorUri", "datatype" : "str" }, "Name" : {"key" : "authorName" ...} }
 
         Returns:
-            list: List of item.
+            list: List of items.
 
-        TODO: refactor and move results to a separate class SparqlResult
         """
-        if self.vars and self.bindings:
-            # just that the method still works somehow
-            vars = self.vars
-            bindings = self.bindings
+        # a list for the results to be returned
+        simple_results = []
 
-            # a list for the results to be returned
-            simple_results = []
+        if len(self.vars) == 1:
+            # there is only one value per binding, therefore the sparql results are transformed
+            # to a list containing values, e.g. ["value1", "value2"]
 
-            # iterate over the bindings and transform the binding into a data item
-            # TODO: this seems to make sense if there are data_items that have multiple key-value-pairs;
-            # there should be a behaviour that is different.
+            for binding in self.bindings:
+                # because there is only one variable, we can use the first element as key here
+                value = self.__get_solution_variable_value(self.vars[0], binding[self.vars[0]], mapping=mapping)
+                simple_results.append(value)
 
-            if len(vars) == 1:
-                # there is only one value per binding, therefore the sparql results are transformed
-                # to a list containing values, e.g. ["value1", "value2"]
+        else:
+            # there are multiple key-value pairs per data_item there the sparql results are transformed
+            # into a list with dictionaries [{},{}]
 
-                if mapping is not None:
-                    if "datatype" in mapping[vars[0]]:
-                        datatype = mapping[vars[0]]["datatype"]
+            for binding in self.bindings:
+
+                data_item = {}
+                for var in self.vars:
+                    value = self.__get_solution_variable_value(var, binding[var], mapping=mapping)
+
+                    key = None
+
+                    # use either the default var as key or if a mapping is available use this
+                    if mapping:
+                        if var in mapping:
+                            if "key" in mapping[var]:
+                                key = mapping[var]["key"]
+
+                    if key:
+                        data_item[key] = value
                     else:
-                        # datatype not specified in the mapping
-                        datatype = None
-                else:
-                    # no mapping
-                    datatype = None
+                        data_item[var] = value
 
-                for binding in bindings:
-                    if datatype is not None:
-                        if datatype == "str" or datatype == "String":
-                            value = str(binding[vars[0]]["value"])
-                        elif datatype == "int" or datatype == "Integer":
-                            value = int(binding[vars[0]]["value"])
-                        else:
-                            raise Exception("Datatype in the mapping not expected.")
-                    else:
-                        # not datatype specified
-                        if binding[vars[0]]["type"] == "literal":
-                            value = str(binding[vars[0]]["value"])
+                simple_results.append(data_item)
 
-                        elif binding[vars[0]]["type"] == "uri":
-                            value = str(binding[vars[0]]["value"])
-
-                        else:
-                            raise Exception("Type " + binding[vars[0]]["type"] + " is not expected.")
-
-                    # append the value to the list that will be returned
-                    simple_results.append(value)
-
-            else:
-                # there are multiple key-value pairs per data_item there the sparql results are transformed
-                # into a list with dictionaries [{},{}]
-
-                for binding in bindings:
-
-                    data_item = {}
-
-                    # iterate over the variables and construct the keys
-                    for var in vars:
-
-                        # if a mapping is provided, use key and expected format
-                        if mapping is not None:
-
-                            if var in mapping:
-                                # there is a mapping available
-                                var_map = mapping[var]
-                            else:
-                                var_map = None
-
-                        else:
-                            # there is no mapping or the variable is not mapped
-                            var_map = None
-
-                        # if there is a value type provided in the mapping (var_map) use this type and
-                        # ignore the type in the result
-                        if var_map:
-                            if "datatype" in var_map:
-                                if var_map["datatype"] == "str" or var_map["datatype"] == "String":
-                                    value = str(binding[var]["value"])
-
-                                elif var_map["datatype"] == "int" or var_map["datatype"] == "Integer":
-                                    value = int(binding[var]["value"])
-
-                                else:
-                                    # TODO: which other datatypes to use?
-                                    raise Exception("Datatype in mapping " + var_map["datatype"] + " is not expected.")
-
-                        else:
-                            # there is no type specified in the mapping, try to map the "type" of the sparql result
-                            # evaluate the "type" to decide what datatype to use
-                            if binding[var]["type"] == "literal":
-                                value = str(binding[var]["value"])
-
-                            elif binding[var]["type"] == "uri":
-                                # transform sparql json results type uri to python string
-                                value = str(binding[var]["value"])
-
-                            # TODO: which type values can be expected.
-
-                            else:
-                                # fallback: just use whatever there is
-                                raise Exception("Value type " + binding[var]["type"] + " is not expected.")
-
-                        # add the value to the data item
-                        # if there is a mapping, use the key in the mapping
-                        if var_map:
-                            if "key" in var_map:
-                                # we have a key, so use this
-                                data_item[var_map["key"]] = value
-                            else:
-                                # there is a mapping, but not of the variable name/key
-                                data_item[var] = value
-                        else:
-                            # not sure, if it is necessary to
-                            data_item[var] = value
-
-                    simple_results.append(data_item)
-
-            return simple_results
+        return simple_results
