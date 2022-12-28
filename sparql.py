@@ -154,6 +154,7 @@ class SparqlQuery:
             description: str = None,
             scope: str = None,
             variables: list = None,
+            uris: list = None,
             execute: bool = False
     ):
         """Initialize query.
@@ -173,6 +174,7 @@ class SparqlQuery:
                 (because of a special union graph that is only available with this triple store).
             variables (list, optional): Variables. If the query uses any, they should be specified.
                 E.g. {"id": "poem_uri", "class": "pdc:PoeticWork", "description":  "URI of a Poem." }
+            uris (list, optional): URIs to inject into a query.
             execute (bool, optional): Execute Flag. If set to True, the query will be executed when the class instance is
                 initiated. Defaults to False.
         """
@@ -225,6 +227,10 @@ class SparqlQuery:
             self.state = "prepared"
 
         # TODO: this could issue a warning, if the checks return True and no variables are defined!
+
+        # If a list of uris is provided with the argument "uri" and we have a template with variables, replace them.
+        if uris is not None and self.template_includes_variables is True:
+            self.inject(uris, target="query")
 
         if execute is True:
             # TODO: Handle the "execute" flag:
@@ -381,6 +387,8 @@ class SparqlQuery:
 
     def execute(self, database: DB) -> bool:
         """Execute a query.
+
+        Will store the results of the query in self.results.
 
         Args:
             database: Instance of the class "DB". Expects to be able to use the method
