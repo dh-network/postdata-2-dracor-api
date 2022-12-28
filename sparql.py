@@ -178,8 +178,8 @@ class SparqlQuery:
             uris (list, optional): URIs to inject into a query.
             database (DB, optional): Instance of DB Class (working connection).
                 Is mandatory if the execute flag is set to True.
-            execute (bool, optional): Execute Flag. If set to True, the query will be executed when the class instance is
-                initiated. Defaults to False.
+            execute (bool, optional): Execute Flag. If set to True, the query will be executed when the class
+            instance is initiated. Defaults to False.
         """
 
         if query:
@@ -224,7 +224,7 @@ class SparqlQuery:
         if self.template:
             self.template_includes_variables = self.check_for_variables(check="template")
 
-        # if only query is provided and it doesn't contain variables, set its status to "prepared":
+        # if only query is provided, and it doesn't contain variables, set its status to "prepared":
         # this means, it can be run
         if self.query and self.query_includes_variables is False:
             self.state = "prepared"
@@ -406,6 +406,7 @@ class SparqlQuery:
             if self.state == "prepared" and self.query_includes_variables is False:
                 # use the sparql method of the supplied database
                 self.results = database.sparql(self.query)
+                # TODO: the results should be instantiated as a separate class SparqlResult
 
                 # set the state to "executed"
                 self.state = "executed"
@@ -448,6 +449,8 @@ class SparqlQuery:
 
         Returns:
             list: List of item.
+
+        TODO: refactor and move results to a separate class SparqlResult
         """
         # makes sense for an executed query only that returned results
         if self.state == "executed" and self.results is not None:
@@ -462,67 +465,112 @@ class SparqlQuery:
             simple_results = []
 
             # iterate over the bindings and transform the binding into a data item
-            for binding in bindings:
+            # TODO: this seems to make sense if there are data_items that have multiple key-value-pairs;
+            # there should be a behaviour that is different.
 
-                data_item = {}
+            if len(vars) == 1:
+                # there is only one value per binding, therefore the sparql results are transformed
+                # to a list containing values, e.g. ["value1", "value2"]
 
-                # iterate over the variables and construct the keys
-                for var in vars:
-
-                    # if a mapping is provided, use key and expected format
-                    if mapping is not None:
-
-                        if var in mapping:
-                            # there is a mapping available
-                            var_map = mapping[var]
-
+                if mapping is not None:
+                    if "datatype" in mapping[vars[0]]:
+                        datatype = mapping[vars[0]]["datatype"]
                     else:
-                        # there is no mapping or the variable is not mapped
-                        var_map = None
+                        # datatype not specified in the mapping
+                        datatype = None
+                else:
+                    # no mapping
+                    datatype = None
 
-                    # if there is a value type provided in the mapping (var_map) use this type and
-                    # ignore the type in the result
-                    if var_map:
-                        if "datatype" in var_map:
-                            if var_map["datatype"] == "str" or var_map["datatype"] == "String":
+                for binding in bindings:
+                    if datatype is not None:
+                        if datatype == "str" or datatype == "String":
+                            value = str(binding[vars[0]]["value"])
+                        elif datatype == "int" or datatype == "Integer":
+                            value = int(binding[vars[0]]["value"])
+                        else:
+                            raise Exception("Datatype in the mapping not expected.")
+                    else:
+                        # not datatype specified
+                        if binding[vars[0]]["type"] == "literal":
+                            value = str(binding[vars[0]]["value"])
+
+                        elif binding[vars[0]]["type"] == "uri":
+                            value = str(binding[vars[0]]["value"])
+
+                        else:
+                            raise Exception("Type " + binding[vars[0]]["type"] + " is not expected.")
+
+                    # append the value to the list that will be returned
+                    simple_results.append(value)
+
+            else:
+                # there are multiple key-value pairs per data_item there the sparql results are transformed
+                # into a list with dictionaries [{},{}]
+
+                for binding in bindings:
+
+                    data_item = {}
+
+                    # iterate over the variables and construct the keys
+                    for var in vars:
+
+                        # if a mapping is provided, use key and expected format
+                        if mapping is not None:
+
+                            if var in mapping:
+                                # there is a mapping available
+                                var_map = mapping[var]
+                            else:
+                                var_map = None
+
+                        else:
+                            # there is no mapping or the variable is not mapped
+                            var_map = None
+
+                        # if there is a value type provided in the mapping (var_map) use this type and
+                        # ignore the type in the result
+                        if var_map:
+                            if "datatype" in var_map:
+                                if var_map["datatype"] == "str" or var_map["datatype"] == "String":
+                                    value = str(binding[var]["value"])
+
+                                elif var_map["datatype"] == "int" or var_map["datatype"] == "Integer":
+                                    value = int(binding[var]["value"])
+
+                                else:
+                                    # TODO: which other datatypes to use?
+                                    raise Exception("Datatype in mapping " + var_map["datatype"] + " is not expected.")
+
+                        else:
+                            # there is no type specified in the mapping, try to map the "type" of the sparql result
+                            # evaluate the "type" to decide what datatype to use
+                            if binding[var]["type"] == "literal":
                                 value = str(binding[var]["value"])
 
-                            elif var_map["datatype"] == "int" or var_map["datatype"] == "Integer":
-                                value = int(binding[var]["value"])
+                            elif binding[var]["type"] == "uri":
+                                # transform sparql json results type uri to python string
+                                value = str(binding[var]["value"])
+
+                            # TODO: which type values can be expected.
 
                             else:
-                                # TODO: which other datatypes to use?
-                                raise Exception("Datatype in the mapping " + var_map["datatype"] + " is not expected.")
+                                # fallback: just use whatever there is
+                                raise Exception("Value type " + binding[var]["type"] + " is not expected.")
 
-                    else:
-                        # there is no type specified in the mapping, try to map the "type" of the sparql result
-                        # evaluate the "type" to decide what datatype to use
-                        if binding[var]["type"] == "literal":
-                            value = str(binding[var]["value"])
-
-                        elif binding[var]["type"] == "uri":
-                            # transform sparql json results type uri to python string
-                            value = str(binding[var]["value"])
-
-                        # TODO: which type values can be expected.
-
+                        # add the value to the data item
+                        # if there is a mapping, use the key in the mapping
+                        if var_map:
+                            if "key" in var_map:
+                                # we have a key, so use this
+                                data_item[var_map["key"]] = value
+                            else:
+                                # there is a mapping, but not of the variable name/key
+                                data_item[var] = value
                         else:
-                            raise Exception("Value type " + binding[var]["type"] + " is not expected.")
-                            # fallback: just use whatever there is
-                            #value = binding[var]["value"]
-
-                    # add the value to the data item
-                    # if there is a mapping, use the key in the mapping
-                    if var_map:
-                        if "key" in var_map:
-                            # we have a key, so use this
-                            data_item[var_map["key"]] = value
-                        else:
-                            # there is a mapping, but not of the variable name/key
+                            # not sure, if it is necessary to
                             data_item[var] = value
-                    else:
-                        data_item[var] = value
 
-                simple_results.append(data_item)
+                    simple_results.append(data_item)
 
             return simple_results
