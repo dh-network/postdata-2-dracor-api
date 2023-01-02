@@ -1,5 +1,10 @@
+"""Core functionality. Maybe this module is obsolete and more of a util"""
+# TODO: maybe split this up into separate modules
 
-# TODO: Maybe make this a method of a query class. Evaluate, if it's still needed.
+
+# Stuff to move somewhere else follows below
+
+# TODO: This is already a method of the SparqlQuery class. Can be removed later, but keep for reference now.
 def inject(
         query: str,
         uris: list,
