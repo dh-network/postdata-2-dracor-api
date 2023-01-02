@@ -67,4 +67,21 @@ class AuthorsOfPoem(PdStardogQuery):
         }
     ]
 
+class PoeticWorkUris(PdStardogQuery):
+    """SPARQL Query: URIs of instances of the class PoeticWork"""
+
+    label = "URIs of poems"
+
+    description = """
+    Get all URIs of instances of the class pdc:PoeticWork. There are all the poems in the graph.
+    """
+
+    query = """
+    SELECT ?work WHERE {
+        ?work a pdc:PoeticWork .
+    }
+    LIMIT 1000000
+    """
+
+
 
