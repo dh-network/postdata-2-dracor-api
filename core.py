@@ -23,6 +23,12 @@ class PostdataCorpus(Corpus):
     # URIs of poems
     poem_uris = None
 
+    # SPARQL Queries:
+    # different queries (e.g. for different triple store setup) could would be set here
+
+    # Get Poem URIs via SPARQL
+    sparql_poem_uris = PoeticWorkUris()
+
     def __init__(self, database: DB = None):
         """
 
@@ -49,10 +55,11 @@ class PostdataCorpus(Corpus):
         else:
             if self.database:
                 # A database connection has been established:
-                # Use the SPARQL Query of class "PoeticWorkUris" to retrieve the uris and simplify the results
-                # If other query should be used, this needs to be made dynamic (e.g. pass a query instance or store them
-                # in this class
-                self.poem_uris = PoeticWorkUris(database=self.database, execute=True).results.simplify()
+                # Use the SPARQL Query of class "PoeticWorkUris" (set as attribute of this class)
+
+                # execute the SPARQL Query against the database and simplify the results (will be a list of uris)
+                self.sparql_poem_uris.execute(self.database)
+                self.poem_uris = self.sparql_poem_uris.results.simplify()
                 return self.poem_uris
             else:
                 raise Exception("Database Connection not available.")
