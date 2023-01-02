@@ -24,7 +24,7 @@ class Corpus:
             'grammatical_syllables': 2116388,
             'metrical_syllables': 1259036}}
     """
-    # Corpus Name
+    # Corpus Name. An ID somehow.
     name = None
 
     # Title of the Corpus
@@ -35,3 +35,30 @@ class Corpus:
 
     # corpus metrics
     metrics = None
+
+    def __init__(self,
+                 name: str = None,
+                 title: str = None,
+                 description: str = None,
+                 metrics: dict = None):
+        """Initialize corpus
+
+        Args:
+            name (str, optional): Name (ID) of the corpus.
+            title (str, optional): Title of the corpus.
+            description (str, optional): Description.
+            metrics (dict, optional): Metrics, that have been precalculated.
+        """
+
+        if name:
+            self.name = name
+
+        if title:
+            self.title = title
+
+        if description:
+            self.description = description
+
+        if metrics:
+            self.metrics = metrics
+
