@@ -33,15 +33,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InfoResponse'
+  /corpora:
+    get:
+      summary: List available corpora
+      description: Returns a list of available corpora
+      operationId: get_corpora
+      responses:
+        '200':
+          description: Available corpora
 openapi: 3.0.3
 components:
   schemas:
     InfoResponse:
       type: object
       properties:
-        description:
-          type: string
         name:
+          type: string
+        description:
           type: string
         version:
           type: string

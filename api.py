@@ -119,11 +119,31 @@ def get_info():
     return jsonify(schema.dump(data))
 
 
+@api.route("/corpora", methods=["GET"])
+def get_corpora():
+    """Lists available corpora
+
+    # TODO: define response schema
+    ---
+    get:
+        summary: List available corpora
+        description: Returns a list of available corpora
+        operationId: get_corpora
+        responses:
+            200:
+                description: Available corpora
+
+    """
+    # TODO: implement the functionality to request corpora
+    return "Need to implement this"
+
+
 # Generate the OpenAPI Specification
 # This can not be moved to the apidoc module,
 # because to generate the Documentation, we need the flask API to be runnable
 with api.test_request_context():
     spec.path(view=get_info)
+    spec.path(view=get_corpora)
 
 # write the OpenAPI Specification as YAML to the root folder
 with open('openapi.yaml', 'w') as f:
