@@ -5,10 +5,6 @@ from sparql import DB
 import os
 import json
 
-# Queries
-from pd_stardog_queries import AuthorsOfPoem
-
-
 # Setup using environment variables: This can be used to configure the service when running in Docker
 service_version = str(os.environ.get("SERVICE_VERSION", "0.0"))
 """SERVICE_VERSION: Version of the service. Will be set with the env file and conform to a github release
