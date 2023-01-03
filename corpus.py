@@ -8,24 +8,14 @@ class Corpus:
         name (str): Name of the corpus. To be used as an ID.
         title (str): Title of the corpus.
         description (str): Description of the corpus.
-        metrics (dict): Metrics of the corpus.
+        num_authors (int): Number of authors.
+        num_poems (int): Number of poems.
+        num_stanzas (int): Number of stanzas.
+        num_verses (int): Number of verse lines.
+        num_words (int): Number of words.
+        num_grammatical_syllables (int): Number of grammatical syllables.
+        num_metrical_syllables (int): Number of metrical syllables
 
-    Example:
-        A response of the API should look like:
-
-        {
-        'name': 'postdata',
-        'title': 'POSTDATA Corpus',
-        'description': 'POSTDATA Knowledge Graph of Poetry. See https://postdata.linhd.uned.es',
-        'metrics':
-            {
-            'authors': 1192,
-            'poems': 10071,
-            'stanzas': 81122,
-            'verses': 544498,
-            'words': 2988230,
-            'grammatical_syllables': 2116388,
-            'metrical_syllables': 1259036}}
     """
     # Corpus Name. An ID somehow.
     name = None
@@ -36,21 +26,41 @@ class Corpus:
     # Description of the Corpus
     description = None
 
-    # corpus metrics
-    metrics = None
+    # Corpus metrics:
+
+    # Number of authors
+    num_authors = None
+
+    # Number of poems
+    num_poems = None
+
+    # Number of stanzas
+    num_stanzas = None
+
+    # Number of verse lines
+    num_verses = None
+
+    # Number of words
+    num_words = None
+
+    # Number of grammatical syllables
+    num_grammatical_syllables = None
+
+    # Number of metrical syllables
+    num_metrical_syllables = None
 
     def __init__(self,
                  name: str = None,
                  title: str = None,
-                 description: str = None,
-                 metrics: dict = None):
+                 description: str = None):
         """Initialize corpus
 
         Args:
             name (str, optional): Name (ID) of the corpus.
             title (str, optional): Title of the corpus.
             description (str, optional): Description.
-            metrics (dict, optional): Metrics, that have been precalculated.
+
+        TODO: make it possible to populate metrics when initializing
         """
 
         if name:
@@ -62,6 +72,5 @@ class Corpus:
         if description:
             self.description = description
 
-        if metrics:
-            self.metrics = metrics
+
 

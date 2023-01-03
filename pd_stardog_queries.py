@@ -67,13 +67,14 @@ class AuthorsOfPoem(PdStardogQuery):
         }
     ]
 
+
 class PoeticWorkUris(PdStardogQuery):
     """SPARQL Query: URIs of instances of the class PoeticWork"""
 
     label = "URIs of poems"
 
     description = """
-    Get all URIs of instances of the class pdc:PoeticWork. There are all the poems in the graph.
+    Get all URIs of instances of the class pdc:PoeticWork. These should be all the poems in the graph.
     """
 
     query = """
@@ -82,6 +83,25 @@ class PoeticWorkUris(PdStardogQuery):
     }
     LIMIT 1000000
     """
+
+
+class CountPoeticWorks(PdStardogQuery):
+    """SPARQL Query: Count instances of class pdc:PoeticWork"""
+
+    label = "Number of Poems"
+
+    description = """
+    Count all instances of the class pdc:PoeticWork. These should be all the poems in the graph.
+    """
+
+    query = """
+    SELECT (COUNT(?poeticWork) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+    ?poeticWork a pdc:PoeticWork .
+    } 
+    LIMIT 1000000
+    """
+
+
 
 
 
