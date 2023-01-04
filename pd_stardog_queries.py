@@ -121,7 +121,6 @@ class CountAuthors(PdStardogQuery):
         ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ; 
             pdc:hasAgent ?Agent .
     }
-    LIMIT 1000000
     """
 
 
@@ -138,7 +137,6 @@ class CountStanzas(PdStardogQuery):
     SELECT (COUNT(?Stanza) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
         ?Stanza a pdp:Stanza .
     }
-    LIMIT 1000000
     """
 
 
@@ -155,14 +153,13 @@ class CountVerses(PdStardogQuery):
     SELECT (COUNT(?line) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
         ?line a pdp:Line .
     } 
-    LIMIT 1000000
     """
 
 
 class CountWords(PdStardogQuery):
     """SPARQL Query: Count words"""
 
-    label = "Number of words"
+    label = "Number of Words"
 
     description = """
     Count all "words" (class pdp:Word) in the Graph. 
@@ -172,8 +169,25 @@ class CountWords(PdStardogQuery):
     SELECT (COUNT(?word) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
         ?word a pdp:Word .
     } 
-    LIMIT 1000000
     """
+
+
+class CountMetricalSyllables(PdStardogQuery):
+    """SPARQL Query: Count metrical syllables"""
+
+    label = "Number of Metrical Syllables"
+
+    description = """
+    Count all "metrical syllables" (class pdp:MetricalSyllable) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?syllable) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?syllable a pdp:MetricalSyllable .
+    } 
+    """
+
+
 
 
 

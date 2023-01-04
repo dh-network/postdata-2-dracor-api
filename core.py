@@ -1,6 +1,7 @@
 from corpus import Corpus
 from sparql import DB
-from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords
+from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords, \
+    CountMetricalSyllables
 
 class PostdataCorpus(Corpus):
     """POSTDATA Corpus
@@ -40,6 +41,8 @@ class PostdataCorpus(Corpus):
     sparql_num_verses = CountVerses()
     # Count Words - used in: get_num_words()
     sparql_num_words = CountWords()
+    # Count Metrical Syllables - used in: get_num_metrical_syllables()
+    sparql_num_metrical_syllables = CountMetricalSyllables()
 
     def __init__(self, database: DB = None):
         """
@@ -190,8 +193,30 @@ class PostdataCorpus(Corpus):
             else:
                 raise Exception("Database Connection not available.")
 
-        # Number of grammatical syllables
-        # num_grammatical_syllables = None
+    def get_num_metrical_syllables(self) -> int:
+        """Count metrical syllables in a corpus.
 
-        # Number of metrical syllables
-        # num_metrical_syllables = None
+        Uses a SPARQL Query of class "CountMetricalSyllables" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of metrical syllables.
+
+        """
+        if self.num_metrical_syllables:
+            return self.num_metrical_syllables
+        else:
+            if self.database:
+                # Use the SPARQL Query of class "CountMetricalSyllables" (set as attribute of this class)
+                self.sparql_num_metrical_syllables.execute(self.database)
+                # normally, the result would be a list containing a single string value
+                # by supplying a mapping to the simplify method the value bound to the variable "count"
+                # can be cast to an integer
+                mapping = {"count": {"datatype": "int"}}
+                self.num_metrical_syllables = self.sparql_num_metrical_syllables.results.simplify(mapping=mapping)[0]
+                return self.num_metrical_syllables
+            else:
+                raise Exception("Database Connection not available.")
+
+
+        # Number of grammatical syllables
+        # num_metrical_grammatical = None
