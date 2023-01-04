@@ -242,6 +242,47 @@ class PostdataCorpus(Corpus):
             else:
                 raise Exception("Database Connection not available.")
 
+    def get_corpus_metrics(self) -> dict:
+        """Assemble and return corpus metrics.
 
-        # Number of grammatical syllables
-        # num_metrical_grammatical = None
+        Will return metrics for "poems", "authors", "stanzas", "verses", "words", "grammatical syllables" and "metrical"
+        syllables.
+
+        Returns:
+            dict: Corpus metrics.
+        """
+        metrics = dict()
+        # run the functions to get the data and add it to metrics
+        for funct in [
+            self.get_num_poems,
+            self.get_num_authors,
+            self.get_num_stanzas,
+            self.get_num_verses,
+            self.get_num_words,
+            self.get_num_grammatical_syllables,
+            self.get_num_metrical_syllables
+        ]:
+            metrics[funct.__name__.replace("get_num_", "")] = funct()
+
+        return metrics
+
+    def get_metadata(self, include_metrics:bool = False) -> dict:
+        """Serialize Corpus Metadata.
+
+        Args:
+            include_metrics (bool, optional): Include metrics. Defaults to False.
+
+        Returns:
+            dict: Serialization of the corpus metadata.
+        """
+        metadata = dict(
+            name=self.name,
+            title=self.title,
+            description=self.description
+        )
+
+        if include_metrics is True:
+            metadata["metrics"] = self.get_corpus_metrics()
+
+        return metadata
+
