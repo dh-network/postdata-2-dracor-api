@@ -102,6 +102,29 @@ class CountPoeticWorks(PdStardogQuery):
     """
 
 
+class CountAuthors(PdStardogQuery):
+    """SPARQL Query: Count authors"""
+
+    label = "Number of Authors"
+
+    description = """
+    Count all "authors" in the Graph. Instances (Persons/Agents) are only counted if they are connected 
+    to a pdc:WorkConception ("Creation" of a Work) in the "AgentRole" (property: pdc:hasAgentRole) 
+    with a function (property: pdc:roleFunction) of "Creator". 
+    """
+
+    query = """
+    SELECT (COUNT(DISTINCT ?Agent) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?WorkConception a pdc:WorkConception ;
+            pdc:hasAgentRole ?AgentRole .
+        
+        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ; 
+            pdc:hasAgent ?Agent .
+    }
+    LIMIT 1000000
+    """
+
+
 
 
 
