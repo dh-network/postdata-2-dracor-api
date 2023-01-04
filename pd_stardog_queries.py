@@ -142,5 +142,21 @@ class CountStanzas(PdStardogQuery):
     """
 
 
+class CountVerses(PdStardogQuery):
+    """SPARQL Query: Count verse lines"""
+
+    label = "Number of Verses"
+
+    description = """
+    Count all "verses" (class pdp:Line) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?line) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?line a pdp:Line .
+    } 
+    LIMIT 1000000
+    """
+
 
 

@@ -1,6 +1,6 @@
 from corpus import Corpus
 from sparql import DB
-from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas
+from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses
 
 class PostdataCorpus(Corpus):
     """POSTDATA Corpus
@@ -34,6 +34,8 @@ class PostdataCorpus(Corpus):
     sparql_num_authors = CountAuthors()
     # Count Stanzas – used in: get_num_stanzas()
     sparql_num_stanzas = CountStanzas()
+    # Count Verses – used in: get_num_verses()
+    sparql_num_verses = CountVerses()
 
     # TODO: Add the queries to get the metrics for works, authors, word count, syllable count, ...
 
@@ -140,10 +142,30 @@ class PostdataCorpus(Corpus):
                 return self.num_stanzas
             else:
                 raise Exception("Database Connection not available.")
-        
 
-        # Number of verse lines
-        # num_verses = None
+    def get_num_verses(self) -> int:
+        """Count verses in a corpus.
+
+        Uses a SPARQL Query of class "CountVerses" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of verse lines.
+        """
+        if self.num_verses:
+            return self.num_verses
+        else:
+            if self.database:
+                # Use the SPARQL Query of class "CountVerses" (set as attribute of this class)
+                self.sparql_num_verses.execute(self.database)
+                # normally, the result would be a list containing a single string value
+                # by supplying a mapping to the simplify method the value bound to the variable "count"
+                # can be cast to an integer
+                mapping = {"count": {"datatype": "int"}}
+                self.num_verses = self.sparql_num_verses.results.simplify(mapping=mapping)[0]
+                return self.num_verses
+            else:
+                raise Exception("Database Connection not available.")
+
 
         # Number of words
         # num_words = None
