@@ -159,4 +159,22 @@ class CountVerses(PdStardogQuery):
     """
 
 
+class CountWords(PdStardogQuery):
+    """SPARQL Query: Count words"""
+
+    label = "Number of words"
+
+    description = """
+    Count all "words" (class pdp:Word) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?word) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?word a pdp:Word .
+    } 
+    LIMIT 1000000
+    """
+
+
+
 

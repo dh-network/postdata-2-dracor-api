@@ -1,6 +1,6 @@
 from corpus import Corpus
 from sparql import DB
-from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses
+from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords
 
 class PostdataCorpus(Corpus):
     """POSTDATA Corpus
@@ -24,7 +24,9 @@ class PostdataCorpus(Corpus):
     poem_uris = None
 
     # SPARQL Queries:
-    # different queries (e.g. for different triple store setup) could would be set here. Just an idea..
+    # different queries (e.g. for different triple store setup) could be set here. Just an idea..
+    # The classes are initialized here.
+    # TODO: check, if there is an option to initialize them when they are actually needed
 
     # URIs of Poems – used in: get_poem_uris()
     sparql_poem_uris = PoeticWorkUris()
@@ -36,8 +38,8 @@ class PostdataCorpus(Corpus):
     sparql_num_stanzas = CountStanzas()
     # Count Verses – used in: get_num_verses()
     sparql_num_verses = CountVerses()
-
-    # TODO: Add the queries to get the metrics for works, authors, word count, syllable count, ...
+    # Count Words - used in: get_num_words()
+    sparql_num_words = CountWords()
 
     def __init__(self, database: DB = None):
         """
@@ -66,7 +68,6 @@ class PostdataCorpus(Corpus):
             if self.database:
                 # A database connection has been established:
                 # Use the SPARQL Query of class "PoeticWorkUris" (set as attribute of this class)
-
                 # execute the SPARQL Query against the database and simplify the results (will be a list of uris)
                 self.sparql_poem_uris.execute(self.database)
                 self.poem_uris = self.sparql_poem_uris.results.simplify()
@@ -166,9 +167,28 @@ class PostdataCorpus(Corpus):
             else:
                 raise Exception("Database Connection not available.")
 
+    def get_num_words(self) -> int:
+        """Count words in a corpus.
 
-        # Number of words
-        # num_words = None
+        Uses a SPARQL Query of class "CountWords" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of words.
+        """
+        if self.num_words:
+            return self.num_words
+        else:
+            if self.database:
+                # Use the SPARQL Query of class "CountWords" (set as attribute of this class)
+                self.sparql_num_words.execute(self.database)
+                # normally, the result would be a list containing a single string value
+                # by supplying a mapping to the simplify method the value bound to the variable "count"
+                # can be cast to an integer
+                mapping = {"count": {"datatype": "int"}}
+                self.num_words = self.sparql_num_words.results.simplify(mapping=mapping)[0]
+                return self.num_words
+            else:
+                raise Exception("Database Connection not available.")
 
         # Number of grammatical syllables
         # num_grammatical_syllables = None
