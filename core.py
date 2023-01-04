@@ -242,7 +242,7 @@ class PostdataCorpus(Corpus):
             else:
                 raise Exception("Database Connection not available.")
 
-    def get_corpus_metrics(self) -> dict:
+    def get_metrics(self) -> dict:
         """Assemble and return corpus metrics.
 
         Will return metrics for "poems", "authors", "stanzas", "verses", "words", "grammatical syllables" and "metrical"
@@ -282,7 +282,7 @@ class PostdataCorpus(Corpus):
         )
 
         if include_metrics is True:
-            metadata["metrics"] = self.get_corpus_metrics()
+            metadata["metrics"] = self.get_metrics()
 
         return metadata
 
