@@ -1,6 +1,6 @@
 from corpus import Corpus
 from sparql import DB
-from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors
+from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas
 
 class PostdataCorpus(Corpus):
     """POSTDATA Corpus
@@ -30,8 +30,10 @@ class PostdataCorpus(Corpus):
     sparql_poem_uris = PoeticWorkUris()
     # Count Poems – used in: get_num_poems()
     sparql_num_poems = CountPoeticWorks()
-    # Count Authors – used in:
+    # Count Authors – used in: get_num_authors()
     sparql_num_authors = CountAuthors()
+    # Count Stanzas – used in: get_num_stanzas()
+    sparql_num_stanzas = CountStanzas()
 
     # TODO: Add the queries to get the metrics for works, authors, word count, syllable count, ...
 
@@ -93,8 +95,6 @@ class PostdataCorpus(Corpus):
             else:
                 raise Exception("Database Connection not available.")
 
-    # TODO: Add methods to retrieve metrics in a similar way
-
     def get_num_authors(self) -> int:
         """Count authors of poems in a corpus.
 
@@ -118,8 +118,29 @@ class PostdataCorpus(Corpus):
             else:
                 raise Exception("Database Connection not available.")
 
-        # Number of stanzas
-        # num_stanzas = None
+    def get_num_stanzas(self) -> int:
+        """Count stanzas in a corpus.
+
+        Uses a SPARQL Query of class "CountStanzas" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of stanzas.
+        """
+        if self.num_stanzas:
+            return self.num_stanzas
+        else:
+            if self.database:
+                # Use the SPARQL Query of class "CountStanzas" (set as attribute of this class)
+                self.sparql_num_stanzas.execute(self.database)
+                # normally, the result would be a list containing a single string value
+                # by supplying a mapping to the simplify method the value bound to the variable "count"
+                # can be cast to an integer
+                mapping = {"count": {"datatype": "int"}}
+                self.num_stanzas = self.sparql_num_stanzas.results.simplify(mapping=mapping)[0]
+                return self.num_stanzas
+            else:
+                raise Exception("Database Connection not available.")
+        
 
         # Number of verse lines
         # num_verses = None

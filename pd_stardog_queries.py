@@ -125,6 +125,22 @@ class CountAuthors(PdStardogQuery):
     """
 
 
+class CountStanzas(PdStardogQuery):
+    """SPARQL Query: Count stanzas"""
+
+    label = "Number of Stanzas"
+
+    description = """
+    Count all "stanzas" (class pdp:Stanza) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?Stanza) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?Stanza a pdp:Stanza .
+    }
+    LIMIT 1000000
+    """
+
 
 
 
