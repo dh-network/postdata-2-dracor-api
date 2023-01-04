@@ -172,6 +172,22 @@ class CountWords(PdStardogQuery):
     """
 
 
+class CountGrammaticalSyllables(PdStardogQuery):
+    """SPARQL Query: Count grammatical syllables"""
+
+    label = "Number of Grammatical Syllables"
+
+    description = """
+    Count all "grammatical syllables" (class pdp:GrammaticalSyllable) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?syllable) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?syllable a pdp:GrammaticalSyllable .
+    }
+    """
+
+
 class CountMetricalSyllables(PdStardogQuery):
     """SPARQL Query: Count metrical syllables"""
 

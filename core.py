@@ -1,7 +1,7 @@
 from corpus import Corpus
 from sparql import DB
 from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords, \
-    CountMetricalSyllables
+    CountMetricalSyllables, CountGrammaticalSyllables
 
 class PostdataCorpus(Corpus):
     """POSTDATA Corpus
@@ -39,9 +39,11 @@ class PostdataCorpus(Corpus):
     sparql_num_stanzas = CountStanzas()
     # Count Verses – used in: get_num_verses()
     sparql_num_verses = CountVerses()
-    # Count Words - used in: get_num_words()
+    # Count Words – used in: get_num_words()
     sparql_num_words = CountWords()
-    # Count Metrical Syllables - used in: get_num_metrical_syllables()
+    # Count Grammatical Syllables – used in get_num_grammatical_syllables()
+    sparql_num_grammatical_syllables = CountGrammaticalSyllables()
+    # Count Metrical Syllables – used in: get_num_metrical_syllables()
     sparql_num_metrical_syllables = CountMetricalSyllables()
 
     def __init__(self, database: DB = None):
@@ -190,6 +192,29 @@ class PostdataCorpus(Corpus):
                 mapping = {"count": {"datatype": "int"}}
                 self.num_words = self.sparql_num_words.results.simplify(mapping=mapping)[0]
                 return self.num_words
+            else:
+                raise Exception("Database Connection not available.")
+
+    def get_num_grammatical_syllables(self) -> int:
+        """Count grammatical syllables in a corpus.
+
+        Uses a SPARQL Query of class "CountGrammaticalSyllables" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of grammatical syllables.
+        """
+        if self.num_grammatical_syllables:
+            return self.num_grammatical_syllables
+        else:
+            if self.database:
+                # Use the SPARQL Query of class "CountGrammaticalSyllables" (set as attribute of this class)
+                self.sparql_num_grammatical_syllables.execute(self.database)
+                # normally, the result would be a list containing a single string value
+                # by supplying a mapping to the simplify method the value bound to the variable "count"
+                # can be cast to an integer
+                mapping = {"count": {"datatype": "int"}}
+                self.num_grammatical_syllables = self.sparql_num_grammatical_syllables.results.simplify(mapping=mapping)[0]
+                return self.num_grammatical_syllables
             else:
                 raise Exception("Database Connection not available.")
 
