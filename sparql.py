@@ -193,7 +193,7 @@ class SparqlQuery:
             # TODO: validate prefixes with SparqlPrefixItem. Evaluate if this is necessary.
             self.prefixes = prefixes
             # Assume, that the prefixes need to be added to the query
-            self.query_includes_prefixes = False
+            self.query_includes_prefixes = self.check_for_prefixes(check="query")
 
         if label:
             self.label = label
@@ -215,6 +215,11 @@ class SparqlQuery:
         else:
             # set initial state to "new"
             self.state = "new"
+
+        # if prefixes are defined and the query provided does not include a prefix definition
+        # TODO: run the method, that adds prefixes
+        if self.query and self.query_includes_prefixes is False:
+            self.add_prefixes()
 
         # run a check for variables in query:
         if self.query:
@@ -263,13 +268,35 @@ class SparqlQuery:
         else:
             return False
 
+    def check_for_prefixes(self, check: str = "query"):
+        """Check if query or template contains prefix declarations.
+
+        Args:
+            check (str, optional): Target of the checking: can either check the "query" (default) or the "template".
+
+        Returns:
+            bool: True if the template or query string contains variables that use the "uri_inject_prefix".
+        """
+        if check == "template" and self.template:
+            check_string = self.query
+        elif check == "query" and self.query:
+            check_string = self.query
+        else:
+            raise Exception("Can not run check." + check + "is not available.")
+
+        if "PREFIX" in check_string:
+            return True
+        else:
+            return False
+        # TODO: implement better check (regex)
+
     def add_prefixes(self) -> bool:
         """Add the prefix declarations to the query.
 
         Returns:
             bool: True if successful.
         """
-        if self.prefixes is not None and self.query_includes_prefixes is False:
+        if self.prefixes and self.query_includes_prefixes is False:
             # need to add prefixes
 
             # set up a list for the prefix declarations

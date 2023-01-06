@@ -4,11 +4,29 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 
 
-class InfoResponse(Schema):
+class ApiInfo(Schema):
     """Schema of the response of the 'api/info' endpoint"""
     name = fields.Str()
     version = fields.Str()
     description = fields.Str()
+
+
+class CorpusMetrics(Schema):
+    """Schema of the corpus metrics included in the corpus metadata"""
+    poems = fields.Int()
+    authors = fields.Int()
+    stanzas = fields.Int()
+    verses = fields.Int()
+    words = fields.Int()
+    grammatical_syllables = fields.Int()
+    metrical_syllables = fields.Int()
+
+
+class CorpusMetadata(Schema):
+    name = fields.Str()
+    title = fields.Str()
+    description = fields.Str()
+    metrics = fields.Nested(CorpusMetrics, required=False)
 
 
 spec = APISpec(

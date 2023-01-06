@@ -1,13 +1,10 @@
 import flask
-from flask import jsonify, Response, send_from_directory
-from apidoc import InfoResponse, spec
+from flask import jsonify, Response, send_from_directory, request
+from apidoc import spec, ApiInfo, CorpusMetadata
 from sparql import DB
+from core import PostdataCorpora
 import os
 import json
-
-# Queries
-from pd_stardog_queries import AuthorsOfPoem
-
 
 # Setup using environment variables: This can be used to configure the service when running in Docker
 service_version = str(os.environ.get("SERVICE_VERSION", "0.0"))
@@ -75,6 +72,11 @@ db = DB(
     password=triplestore_pwd,
     database=triplestore_db)
 
+# Setup of the corpora
+# the demonstrator uses only one corpus with the name "postdata" because POSTDATA project has not structured their data
+# into corpora/collections but added everything to a single graph. We treat this graph as a single corpus, still
+# the setup of the API would allow for multiple corpora
+corpora = PostdataCorpora(database=db)
 
 # Setup of flask API
 api = flask.Flask(__name__)
@@ -103,7 +105,7 @@ def get_info():
                 description: Information about the API
                 content:
                     application/json:
-                        schema: InfoResponse
+                        schema: ApiInfo
     """
 
     data = dict(
@@ -113,10 +115,64 @@ def get_info():
     )
     # To make sure, that the response matches the schema defined in the OpenAPI
     # we validate this data using the InfoResponse Schema.
-    schema = InfoResponse()
+    schema = ApiInfo()
     schema.load(data)
 
     return jsonify(schema.dump(data))
+
+
+@api.route("/corpora", methods=["GET"])
+def get_corpora():
+    """Lists available corpora
+
+    # TODO: define response schema. this is tricky, because marshmallow allows for dictionaries only.
+    ---
+    get:
+        summary: List available corpora
+        description: Returns a list of available corpora
+        operationId: get_corpora
+        parameters:
+            -   in: query
+                name: include
+                description: Include additional information, e.g. corpus metrics.
+                required: false
+                example: metrics
+                schema:
+                    type: string
+                    enum:
+                        - metrics
+        responses:
+            200:
+                description: Available corpora.
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items: CorpusMetadata
+            400:
+                description: Invalid value of parameter "include".
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+    """
+    if "include" in request.args:
+        param_include = str(request.args["include"])
+    else:
+        param_include = None
+
+    if param_include:
+        if param_include == "metrics":
+            response_data = corpora.list_corpora(include_metrics=True)
+        else:
+            response_data = None
+            return Response(f"{str(request.args['include'])} is not a valid value of parameter 'include'.", status=400,
+                            mimetype="text/plain")
+    else:
+        response_data = corpora.list_corpora()
+
+    # TODO: validate against response schema
+    return jsonify(response_data)
 
 
 # Generate the OpenAPI Specification
@@ -124,6 +180,7 @@ def get_info():
 # because to generate the Documentation, we need the flask API to be runnable
 with api.test_request_context():
     spec.path(view=get_info)
+    spec.path(view=get_corpora)
 
 # write the OpenAPI Specification as YAML to the root folder
 with open('openapi.yaml', 'w') as f:

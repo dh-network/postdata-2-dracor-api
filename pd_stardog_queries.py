@@ -68,3 +68,143 @@ class AuthorsOfPoem(PdStardogQuery):
     ]
 
 
+class PoeticWorkUris(PdStardogQuery):
+    """SPARQL Query: URIs of instances of the class PoeticWork"""
+
+    label = "URIs of poems"
+
+    description = """
+    Get all URIs of instances of the class pdc:PoeticWork. These should be all the poems in the graph.
+    """
+
+    query = """
+    SELECT ?work WHERE {
+        ?work a pdc:PoeticWork .
+    }
+    LIMIT 1000000
+    """
+
+
+class CountPoeticWorks(PdStardogQuery):
+    """SPARQL Query: Count instances of class pdc:PoeticWork"""
+
+    label = "Number of Poems"
+
+    description = """
+    Count all instances of the class pdc:PoeticWork. These should be all the poems in the graph.
+    """
+
+    query = """
+    SELECT (COUNT(?poeticWork) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+    ?poeticWork a pdc:PoeticWork .
+    } 
+    LIMIT 1000000
+    """
+
+
+class CountAuthors(PdStardogQuery):
+    """SPARQL Query: Count authors"""
+
+    label = "Number of Authors"
+
+    description = """
+    Count all "authors" in the Graph. Instances (Persons/Agents) are only counted if they are connected 
+    to a pdc:WorkConception ("Creation" of a Work) in the "AgentRole" (property: pdc:hasAgentRole) 
+    with a function (property: pdc:roleFunction) of "Creator". 
+    """
+
+    query = """
+    SELECT (COUNT(DISTINCT ?Agent) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?WorkConception a pdc:WorkConception ;
+            pdc:hasAgentRole ?AgentRole .
+        
+        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ; 
+            pdc:hasAgent ?Agent .
+    }
+    """
+
+
+class CountStanzas(PdStardogQuery):
+    """SPARQL Query: Count stanzas"""
+
+    label = "Number of Stanzas"
+
+    description = """
+    Count all "stanzas" (class pdp:Stanza) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?Stanza) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?Stanza a pdp:Stanza .
+    }
+    """
+
+
+class CountVerses(PdStardogQuery):
+    """SPARQL Query: Count verse lines"""
+
+    label = "Number of Verses"
+
+    description = """
+    Count all "verses" (class pdp:Line) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?line) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?line a pdp:Line .
+    } 
+    """
+
+
+class CountWords(PdStardogQuery):
+    """SPARQL Query: Count words"""
+
+    label = "Number of Words"
+
+    description = """
+    Count all "words" (class pdp:Word) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?word) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?word a pdp:Word .
+    } 
+    """
+
+
+class CountGrammaticalSyllables(PdStardogQuery):
+    """SPARQL Query: Count grammatical syllables"""
+
+    label = "Number of Grammatical Syllables"
+
+    description = """
+    Count all "grammatical syllables" (class pdp:GrammaticalSyllable) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?syllable) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?syllable a pdp:GrammaticalSyllable .
+    }
+    """
+
+
+class CountMetricalSyllables(PdStardogQuery):
+    """SPARQL Query: Count metrical syllables"""
+
+    label = "Number of Metrical Syllables"
+
+    description = """
+    Count all "metrical syllables" (class pdp:MetricalSyllable) in the Graph. 
+    """
+
+    query = """
+    SELECT (COUNT(?syllable) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        ?syllable a pdp:MetricalSyllable .
+    } 
+    """
+
+
+
+
+
+

@@ -34,8 +34,10 @@ COPY api.py /api
 COPY static /api/static
 COPY apidoc.py /api
 COPY core.py  /api
-COPY queries.py /api
 COPY sparql.py /api
+COPY pd_stardog_queries.py /api
+COPY corpora.py /api
+COPY corpus.py /api
 
 # configure the container to run in an executed manner
 ENTRYPOINT [ "python", "/api/api.py" ]

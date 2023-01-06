@@ -32,16 +32,74 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InfoResponse'
+                $ref: '#/components/schemas/ApiInfo'
+  /corpora:
+    get:
+      summary: List available corpora
+      description: Returns a list of available corpora
+      operationId: get_corpora
+      parameters:
+      - in: query
+        name: include
+        description: Include additional information, e.g. corpus metrics.
+        required: false
+        example: metrics
+        schema:
+          type: string
+          enum:
+          - metrics
+      responses:
+        '200':
+          description: Available corpora.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CorpusMetadata'
+        '400':
+          description: Invalid value of parameter "include".
+          content:
+            text/plain:
+              schema:
+                type: string
 openapi: 3.0.3
 components:
   schemas:
-    InfoResponse:
+    ApiInfo:
       type: object
       properties:
-        description:
-          type: string
         name:
           type: string
         version:
+          type: string
+        description:
+          type: string
+    CorpusMetrics:
+      type: object
+      properties:
+        words:
+          type: integer
+        metrical_syllables:
+          type: integer
+        stanzas:
+          type: integer
+        verses:
+          type: integer
+        authors:
+          type: integer
+        poems:
+          type: integer
+        grammatical_syllables:
+          type: integer
+    CorpusMetadata:
+      type: object
+      properties:
+        name:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/CorpusMetrics'
+        description:
+          type: string
+        title:
           type: string
