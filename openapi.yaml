@@ -63,6 +63,19 @@ paths:
             text/plain:
               schema:
                 type: string
+  /corpora/{corpusname}:
+    get:
+      summary: List corpus content
+      description: Returns a list poems in a corpus
+      operationId: get_corpus
+      parameters:
+      - in: path
+        name: corpusname
+        description: Name/ID of the corpus.
+        required: true
+        example: postdata
+        schema:
+          type: string
 openapi: 3.0.3
 components:
   schemas:
@@ -71,35 +84,35 @@ components:
       properties:
         name:
           type: string
-        version:
-          type: string
         description:
+          type: string
+        version:
           type: string
     CorpusMetrics:
       type: object
       properties:
-        words:
+        poems:
           type: integer
         metrical_syllables:
+          type: integer
+        grammatical_syllables:
+          type: integer
+        words:
+          type: integer
+        authors:
           type: integer
         stanzas:
           type: integer
         verses:
-          type: integer
-        authors:
-          type: integer
-        poems:
-          type: integer
-        grammatical_syllables:
           type: integer
     CorpusMetadata:
       type: object
       properties:
         name:
           type: string
-        metrics:
-          $ref: '#/components/schemas/CorpusMetrics'
-        description:
-          type: string
         title:
           type: string
+        description:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/CorpusMetrics'

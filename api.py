@@ -175,12 +175,39 @@ def get_corpora():
     return jsonify(response_data)
 
 
+@api.route("/corpora/<path:corpusname>", methods=["GET"])
+def get_corpus_content(corpusname:str):
+    """List corpus content.
+
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+
+    ---
+    get:
+        summary: List corpus content
+        description: Returns a list poems in a corpus
+        operationId: get_corpus
+        parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
+    """
+    # TODO: implement "/corpora/{corpusname}" endpoint
+    return f"Needs to be implemented! Would return contents of {corpusname}."
+
+
 # Generate the OpenAPI Specification
 # This can not be moved to the apidoc module,
 # because to generate the Documentation, we need the flask API to be runnable
 with api.test_request_context():
     spec.path(view=get_info)
     spec.path(view=get_corpora)
+    spec.path(view=get_corpus_content)
 
 # write the OpenAPI Specification as YAML to the root folder
 with open('openapi.yaml', 'w') as f:
