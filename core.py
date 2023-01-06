@@ -1,7 +1,9 @@
+from corpora import Corpora
 from corpus import Corpus
 from sparql import DB
 from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords, \
     CountMetricalSyllables, CountGrammaticalSyllables
+
 
 class PostdataCorpus(Corpus):
     """POSTDATA Corpus
@@ -286,3 +288,15 @@ class PostdataCorpus(Corpus):
 
         return metadata
 
+
+class PostdataCorpora(Corpora):
+    """POSTDATA Project's corpora.
+
+    The project stores all poems in a single Knowledge Graph. Therefore, this class is more of a work-around to enable
+    the addition of other corpora later.
+    """
+    corpora = dict(
+        postdata=PostdataCorpus()
+    )
+
+    description = """Corpora contained in POSTDATA's Knowledge Graph."""
