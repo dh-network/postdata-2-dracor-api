@@ -125,7 +125,6 @@ def get_info():
 def get_corpora():
     """Lists available corpora
 
-    # TODO: define response schema. this is tricky, because marshmallow allows for dictionaries only.
     ---
     get:
         summary: List available corpora
