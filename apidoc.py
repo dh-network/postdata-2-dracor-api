@@ -4,7 +4,7 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 
 
-class InfoResponse(Schema):
+class ApiInfo(Schema):
     """Schema of the response of the 'api/info' endpoint"""
     name = fields.Str()
     version = fields.Str()

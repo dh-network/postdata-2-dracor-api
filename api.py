@@ -1,6 +1,6 @@
 import flask
 from flask import jsonify, Response, send_from_directory, request
-from apidoc import spec, InfoResponse, CorpusMetadata
+from apidoc import spec, ApiInfo, CorpusMetadata
 from sparql import DB
 from core import PostdataCorpora
 import os
@@ -105,7 +105,7 @@ def get_info():
                 description: Information about the API
                 content:
                     application/json:
-                        schema: InfoResponse
+                        schema: ApiInfo
     """
 
     data = dict(
@@ -115,7 +115,7 @@ def get_info():
     )
     # To make sure, that the response matches the schema defined in the OpenAPI
     # we validate this data using the InfoResponse Schema.
-    schema = InfoResponse()
+    schema = ApiInfo()
     schema.load(data)
 
     return jsonify(schema.dump(data))
