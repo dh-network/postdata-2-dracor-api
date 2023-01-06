@@ -26,6 +26,8 @@ class PostdataCorpus(Corpus):
     # URIs of poems
     poem_uris = None
 
+    # TODO: implement a lookup functionality: hashed URI to full uri of poem; and vice-versa
+
     # SPARQL Queries:
     # different queries (e.g. for different triple store setup) could be set here. Just an idea..
     # The classes are initialized here.
