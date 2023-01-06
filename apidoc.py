@@ -11,6 +11,24 @@ class InfoResponse(Schema):
     description = fields.Str()
 
 
+class CorpusMetrics(Schema):
+    """Schema of the corpus metrics included in the corpus metadata"""
+    poems = fields.Int()
+    authors = fields.Int()
+    stanzas = fields.Int()
+    verses = fields.Int()
+    words = fields.Int()
+    grammatical_syllables = fields.Int()
+    metrical_syllables = fields.Int()
+
+
+class CorpusMetadata(Schema):
+    name = fields.Str()
+    title = fields.Str()
+    description = fields.Str()
+    metrics = fields.Nested(CorpusMetrics, required=False)
+
+
 spec = APISpec(
     title="Poecor POSTDATA connector",
     version="1.0",
