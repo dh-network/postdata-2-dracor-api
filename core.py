@@ -4,7 +4,7 @@ from corpus import Corpus
 from poem import Poem
 from sparql import DB
 from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords, \
-    CountMetricalSyllables, CountGrammaticalSyllables, PoemTitle
+    CountMetricalSyllables, CountGrammaticalSyllables, PoemTitle, PoemCreationYear
 
 
 class PostdataCorpus(Corpus):
@@ -343,6 +343,8 @@ class PostdataPoem(Poem):
     # SPARQL Queries:
     # Title of the Poem – used in: get_title()
     sparql_title = PoemTitle()
+    # Year of Creation – used in: get_creation_year()
+    sparql_creation_year = PoemCreationYear()
 
     def __init__(self, uri: str = None, database: DB = None):
         """Initialize poem
@@ -402,4 +404,39 @@ class PostdataPoem(Poem):
             else:
                 raise Exception("Database Connection not available.")
 
+    def get_creation_year(self) -> str:
+        """Get the year of creation of a poem.
 
+        Uses a SPARQL Query of class "PoemCreationYear" of the module "pd_stardog_queries".
+
+        Attention: If there are multiple values, only one (the first of the list returned by the query) is returned.
+
+        Returns:
+            str: Year of the creation. It must not be assumed that the returned string value can be automatically cast
+                into a date data type, because the returned value might also contain a marker of uncertainty, e.g.
+                "¿?", but also "¿Ca. 1580?" or "¿1603?".
+        TODO: find out, which modifiers of uncertainty might be returned.
+        """
+        if self.creation_year:
+            return self.creation_year
+        else:
+            if self.database:
+                # Use the SPARQL Query of class "PoemCreationYear" (set as attribute of this class)
+                if self.uri:
+                    # inject the URI of the poem into the query
+                    self.sparql_creation_year.inject([self.uri])
+                else:
+                    raise Exception("No URI of the poem specified. Can not get any attributes.")
+                self.sparql_creation_year.execute(self.database)
+                data = self.sparql_creation_year.results.simplify()
+                if len(data) == 0:
+                    self.creation_year = None
+                elif len(data) == 1:
+                    self.creation_year = data[0]
+                else:
+                    raise Exception("Multiple values for creation year. Not implemented.")
+
+                return self.creation_year
+
+            else:
+                raise Exception("Database Connection not available.")

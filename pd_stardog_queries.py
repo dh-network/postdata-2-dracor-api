@@ -192,6 +192,35 @@ class PoemTitle(PdStardogQuery):
     ]
 
 
+class PoemCreationYear(PdStardogQuery):
+    """SPARQL Query: Get Creation Year of a Poem"""
+
+    label = "Creation Year of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the query returns the value of the Time Span of of the Creation Activity 
+    that resulted (pdc:initiated) in the Work.
+    """
+
+    template = """
+    SELECT ?CreationDate FROM <tag:stardog:api:context:local> WHERE {
+        ?Creation pdc:initiated <$1>;
+              pdc:hasTimeSpan ?ts.
+  
+      ?ts pdc:date ?CreationDate.
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
+
 class PoemAuthors(PdStardogQuery):
     """SPARQL Query: Author(s) of a poem"""
 
