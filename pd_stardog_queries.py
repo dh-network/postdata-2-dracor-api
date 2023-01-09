@@ -220,7 +220,6 @@ class PoemCreationYear(PdStardogQuery):
     ]
 
 
-
 class PoemAuthors(PdStardogQuery):
     """SPARQL Query: Author(s) of a poem"""
 
