@@ -257,3 +257,56 @@ class PoemAuthors(PdStardogQuery):
     ]
 
 
+class AuthorNames(PdStardogQuery):
+    """SPARQL Query: Name(s) of an Author"""
+
+    label = "Name(s) of an Author"
+
+    description = """
+    For a single author (pdc:person) with an "author_uri" the query returns all names attached 
+    via the property "pdc:name".
+    """
+
+    template = """
+    SELECT ?Name FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:name ?Name .
+    }
+    """
+
+    variables = [
+        {
+            "id": "author_uri",
+            "class": "pdc:Person",
+            "description": "URI of an Author."
+        }
+    ]
+
+
+class AuthorSameAs(PdStardogQuery):
+    """SPARQL Query: URI of an Author in an External Reference Resource"""
+
+    label = "External Reference Resource URI of an author"
+
+    description = """
+    For a single author (pdc:person) with an "author_uri" the query returns this author's URIs in external reference
+    resources, that are attached via the property owl:sameAs. Normally, this is a URI of a Wikidata Item.
+    """
+
+    template = """
+    SELECT ?uri FROM <tag:stardog:api:context:local> WHERE {
+        <$1> owl:sameAs ?uri .
+    }
+    """
+
+    variables = [
+        {
+            "id": "author_uri",
+            "class": "pdc:Person",
+            "description": "URI of an Author."
+        }
+    ]
+
+
+
+
+

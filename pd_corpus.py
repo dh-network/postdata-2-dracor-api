@@ -3,6 +3,7 @@ from corpus import Corpus
 from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords, \
     CountMetricalSyllables, CountGrammaticalSyllables
 
+
 class PostdataCorpus(Corpus):
     """POSTDATA Corpus
 
