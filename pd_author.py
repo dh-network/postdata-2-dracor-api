@@ -16,7 +16,7 @@ class PostdataAuthor(Author):
     # Database connection
     database = None
 
-    def __init__(self, uri:str = None, database:DB = None):
+    def __init__(self, uri: str = None, database: DB = None):
         """Initialize author
 
         Args:
