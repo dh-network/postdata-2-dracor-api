@@ -1,6 +1,3 @@
-from sparql import DB
-
-
 class Corpus:
     """Corpus of poems
 
