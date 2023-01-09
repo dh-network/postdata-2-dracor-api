@@ -2,7 +2,7 @@ import flask
 from flask import jsonify, Response, send_from_directory, request
 from apidoc import spec, ApiInfo, CorpusMetadata
 from sparql import DB
-from core import PostdataCorpora
+from pd_corpora import PostdataCorpora
 import os
 import json
 
