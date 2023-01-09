@@ -501,8 +501,6 @@ class PostdataPoem(Poem):
             author_poem = self.__split_uri_in_author_poem_parts()
             author_part = author_poem[0]
             poem_part = author_poem[1]
-            url = f"{base_url}/{lang}/author/{author_part}/poetic-work/{poem_part}"
-            return url
-
-
+            self.poetry_lab_url = f"{base_url}/{lang}/author/{author_part}/poetic-work/{poem_part}"
+            return self.poetry_lab_url
 
