@@ -31,43 +31,6 @@ class PdStardogQuery(SparqlQuery):
     ]
 
 
-class AuthorsOfPoem(PdStardogQuery):
-    """SPARQL Query: Author(s) of a poem"""
-
-    label = "Author(s) of a Poem"
-
-    description = """
-    For a single poem with a "poem_uri" the query returns all URIs of "agents"
-    that have the "roleFunction" of "creator" in a relation to a "WorkConception".
-    Optionally, it returns a sample name of the author.
-    """
-
-    template = """
-    SELECT ?Agent (SAMPLE(?Name) AS ?Name)  WHERE {
-        <$1> a pdc:PoeticWork ;
-            pdc:wasInitiatedBy ?WorkConception .
-
-        ?WorkConception pdc:hasAgentRole ?AgentRole .
-
-        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ;
-            pdc:hasAgent ?Agent .
-
-        OPTIONAL {
-            ?Agent pdc:name ?Name .
-        }
-    }
-    GROUP BY ?Agent
-    """
-
-    variables = [
-        {
-            "id": "poem_uri",
-            "class": "pdc:PoeticWork",
-            "description":  "URI of a Poem."
-        }
-    ]
-
-
 class PoeticWorkUris(PdStardogQuery):
     """SPARQL Query: URIs of instances of the class PoeticWork"""
 
@@ -204,7 +167,65 @@ class CountMetricalSyllables(PdStardogQuery):
     """
 
 
+class PoemTitle(PdStardogQuery):
+    """SPARQL Query: Get Title of a Poem"""
+
+    label = "Title of a Poem"
+
+    description = """
+    For a single poem (pdc:PoeticWork) with a "poem_uri" the query returns all titles (via property pdc:title).
+    """
+
+    template = """
+    SELECT ?title FROM <tag:stardog:api:context:local> WHERE {
+        <$1> a pdc:PoeticWork ;
+            pdc:title ?title.
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
 
 
+class PoemAuthors(PdStardogQuery):
+    """SPARQL Query: Author(s) of a poem"""
+
+    label = "Author(s) of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the query returns all URIs of "agents"
+    that have the "roleFunction" of "creator" in a relation to a "WorkConception".
+    Optionally, it returns a sample name of the author.
+    """
+
+    template = """
+    SELECT ?Agent (SAMPLE(?Name) AS ?Name)  WHERE {
+        <$1> a pdc:PoeticWork ;
+            pdc:wasInitiatedBy ?WorkConception .
+
+        ?WorkConception pdc:hasAgentRole ?AgentRole .
+
+        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ;
+            pdc:hasAgent ?Agent .
+
+        OPTIONAL {
+            ?Agent pdc:name ?Name .
+        }
+    }
+    GROUP BY ?Agent
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description":  "URI of a Poem."
+        }
+    ]
 
 
