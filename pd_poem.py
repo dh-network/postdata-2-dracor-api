@@ -71,6 +71,8 @@ class PostdataPoem(Poem):
         """Helper method to generate a short md5 hash from the URI
 
         Create a md5 hash and trunctate it. This is handled by the shorthash function from the util module.
+        Attention: This is aligned to PostdataCorpus method __generate_poem_id_by_poem_uri; if changed independently,
+        the lookup of poems won't work.
 
         Returns:
             bool: True if successful.
