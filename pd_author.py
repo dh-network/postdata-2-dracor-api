@@ -28,12 +28,6 @@ class PostdataAuthor(Author):
     # ID/Q-Number in Wikidata
     wikidata_id = None
 
-    # SPARQL Queries
-    # Names – used in: get_names()
-    sparql_names = AuthorNames()
-    # External Reference Resource URIs – used in: get_wikidata_id()
-    sparql_external_refs = AuthorSameAs()
-
     def __init__(self, uri: str = None, database: DB = None):
         """Initialize author
 
@@ -46,6 +40,12 @@ class PostdataAuthor(Author):
 
         if database:
             self.database = database
+
+        # SPARQL Queries
+        # Names – used in: get_names()
+        self.sparql_names = AuthorNames()
+        # External Reference Resource URIs – used in: get_wikidata_id()
+        self.sparql_external_refs = AuthorSameAs()
 
     def get_names(self) -> list:
         """Get Names of Author.
@@ -89,8 +89,25 @@ class PostdataAuthor(Author):
         Returns:
             str: Q-Number/Wikidata-ID
         """
-        # TODO: implement this, maybe not the external look-up functionality.
-        pass
+        if self.wikidata_id:
+            return self.wikidata_id
+        else:
+            if self.database:
+                # Use the SPARQL Query of class "AuthorSameAs" (set as attribute of this class)
+                if self.uri:
+                    # inject the URI of the poem into the query
+                    self.sparql_external_refs.inject([self.uri])
+                else:
+                    raise Exception("No URI of the author specified. Can not get any attributes.")
+                self.sparql_external_refs.execute(self.database)
+                data = self.sparql_external_refs.results.simplify()
+                for ref in data:
+                    if ref.startswith("http://www.wikidata.org/entity/"):
+                        self.wikidata_id = ref.replace("http://www.wikidata.org/entity/", "").strip()
+                return self.wikidata_id
+            else:
+                raise Exception("Database Connection not available.")
+
 
 
 
