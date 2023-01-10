@@ -454,7 +454,7 @@ class PostdataCorpus(Corpus):
             self.load_poem(uri=poem_uri)
         return True
 
-    def get_metadata_of_poem_set(self, limit: int = 500, offset: int = 0, include_authors: bool = True) -> list:
+    def get_metadata_of_poem_set(self, limit: int = 500, offset: int = 0, include_authors: bool = False) -> list:
         """Serialize Metadata of a set of included poems
 
         Args:
@@ -464,6 +464,7 @@ class PostdataCorpus(Corpus):
 
         Returns:
             list: Metadata on poems.
+        TODO: This is slow, maybe find ways to optimize.
         """
         set_metadata = list()
         set_uris = self.get_uri_set(limit=limit, offset=offset)
