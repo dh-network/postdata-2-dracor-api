@@ -370,7 +370,7 @@ class PostdataCorpus(Corpus):
             pass
         else:
             self.get_poem_uris()
-
+        # TODO: not sure about this limit + offset thing
         return self.poem_uris[offset:offset + limit]
 
     def load_poem(self, id: str = None, uri:str = None) -> bool:
@@ -466,7 +466,7 @@ class PostdataCorpus(Corpus):
             list: Metadata on poems.
         """
         set_metadata = list()
-        set_uris = self.get_uri_set(limit=limit,offset=offset)
+        set_uris = self.get_uri_set(limit=limit, offset=offset)
         for poem_uri in set_uris:
             # load the poem: will not load second time, if already there
             self.load_poem(uri=poem_uri)
