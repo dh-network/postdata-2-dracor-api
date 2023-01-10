@@ -108,6 +108,37 @@ class PostdataAuthor(Author):
             else:
                 raise Exception("Database Connection not available.")
 
+    def get_metadata(self, include_wikidata: bool = False) -> dict:
+        """Serialize Author Metadata.
+
+        Args:
+            include_wikidata (bool, optional): Includes Reference to Wikidata. Defaults to False.
+
+        Returns:
+            dict: Serialization of the author metadata.
+        """
+        if not self.pref_name:
+            # We need the names for the metadata, if None, try to get it first
+            self.get_names()
+
+        metadata = dict(
+            name=self.pref_name,
+            uri=self.uri
+        )
+
+        if include_wikidata is True:
+            wd = self.get_wikidata_id()
+            wikidata_ref = dict(
+                ref=wd,
+                type="wikidata"
+            )
+            if "refs" in metadata:
+                metadata.append(wikidata_ref)
+            else:
+                metadata["refs"] = [wikidata_ref]
+
+        return metadata
+
 
 
 
