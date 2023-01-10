@@ -269,7 +269,7 @@ class PostdataCorpus(Corpus):
 
         return metrics
 
-    def get_metadata(self, include_metrics:bool = False) -> dict:
+    def get_metadata(self, include_metrics: bool = False) -> dict:
         """Serialize Corpus Metadata.
 
         Args:
