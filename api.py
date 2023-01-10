@@ -363,7 +363,7 @@ def get_ids(corpusname: str):
                             items:
                                 type: string
             400:
-                description: Invalid value of parameter "type". Only "poems" is implemented.
+                description: Invalid value of parameter "type". Only "poem" is implemented.
                 content:
                     text/plain:
                         schema:
