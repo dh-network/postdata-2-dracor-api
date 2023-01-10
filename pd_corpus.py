@@ -371,7 +371,7 @@ class PostdataCorpus(Corpus):
         else:
             self.get_poem_uris()
 
-        return self.poem_uris[offset:limit]
+        return self.poem_uris[offset:offset + limit]
 
     def load_poem(self, id: str = None, uri:str = None) -> bool:
         """Load a poem of the corpus.
@@ -454,3 +454,25 @@ class PostdataCorpus(Corpus):
             self.load_poem(uri=poem_uri)
         return True
 
+    def get_metadata_of_poem_set(self, limit: int = 500, offset: int = 0, include_authors: bool = True) -> list:
+        """Serialize Metadata of a set of included poems
+
+        Args:
+            limit (int): Number of poems to include.
+            offset (int): position to start at (in the list of poem_uris).
+            include_authors (bool, optional): Include information on author in single poem metadata item.
+
+        Returns:
+            list: Metadata on poems.
+        """
+        set_metadata = list()
+        set_uris = self.get_uri_set(limit=limit,offset=offset)
+        for poem_uri in set_uris:
+            # load the poem: will not load second time, if already there
+            self.load_poem(uri=poem_uri)
+            # need the id to address it
+            poem_id = self.__generate_poem_id_by_poem_uri(poem_uri)
+            if poem_id in self.poems:
+                poem_metadata = self.poems[poem_id].get_metadata(include_authors=include_authors)
+                set_metadata.append(poem_metadata)
+        return set_metadata
