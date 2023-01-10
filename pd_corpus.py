@@ -27,28 +27,6 @@ class PostdataCorpus(Corpus):
 
     # TODO: implement a lookup functionality: hashed URI to full uri of poem; and vice-versa
 
-    # SPARQL Queries:
-    # different queries (e.g. for different triple store setup) could be set here. Just an idea..
-    # The classes are initialized here.
-    # TODO: check, if there is an option to initialize them when they are actually needed
-
-    # URIs of Poems – used in: get_poem_uris()
-    sparql_poem_uris = PoeticWorkUris()
-    # Count Poems – used in: get_num_poems()
-    sparql_num_poems = CountPoeticWorks()
-    # Count Authors – used in: get_num_authors()
-    sparql_num_authors = CountAuthors()
-    # Count Stanzas – used in: get_num_stanzas()
-    sparql_num_stanzas = CountStanzas()
-    # Count Verses – used in: get_num_verses()
-    sparql_num_verses = CountVerses()
-    # Count Words – used in: get_num_words()
-    sparql_num_words = CountWords()
-    # Count Grammatical Syllables – used in get_num_grammatical_syllables()
-    sparql_num_grammatical_syllables = CountGrammaticalSyllables()
-    # Count Metrical Syllables – used in: get_num_metrical_syllables()
-    sparql_num_metrical_syllables = CountMetricalSyllables()
-
     def __init__(self, database: DB = None):
         """
 
@@ -59,6 +37,28 @@ class PostdataCorpus(Corpus):
         """
         if database:
             self.database = database
+
+        # SPARQL Queries:
+        # different queries (e.g. for different triple store setup) could be set here. Just an idea..
+        # The classes are initialized here, because if only inside the class, new instances remember the query.
+        # TODO: check, if there is an option to initialize them when they are actually needed
+
+        # URIs of Poems – used in: get_poem_uris()
+        self.sparql_poem_uris = PoeticWorkUris()
+        # Count Poems – used in: get_num_poems()
+        self.sparql_num_poems = CountPoeticWorks()
+        # Count Authors – used in: get_num_authors()
+        self.sparql_num_authors = CountAuthors()
+        # Count Stanzas – used in: get_num_stanzas()
+        self.sparql_num_stanzas = CountStanzas()
+        # Count Verses – used in: get_num_verses()
+        self.sparql_num_verses = CountVerses()
+        # Count Words – used in: get_num_words()
+        self.sparql_num_words = CountWords()
+        # Count Grammatical Syllables – used in get_num_grammatical_syllables()
+        self.sparql_num_grammatical_syllables = CountGrammaticalSyllables()
+        # Count Metrical Syllables – used in: get_num_metrical_syllables()
+        self.sparql_num_metrical_syllables = CountMetricalSyllables()
 
     def get_poem_uris(self) -> list:
         """Get a list of URIs of instances of the class pdc:PoeticWork.

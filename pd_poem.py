@@ -29,12 +29,6 @@ class PostdataPoem(Poem):
     # View of the poem in POSTDATAs Poetry Lab
     poetry_lab_url = None
 
-    # SPARQL Queries:
-    # Title of the Poem – used in: get_title()
-    sparql_title = PoemTitle()
-    # Year of Creation – used in: get_creation_year()
-    sparql_creation_year = PoemCreationYear()
-
     def __init__(self, uri: str = None, database: DB = None):
         """Initialize poem
 
@@ -55,6 +49,12 @@ class PostdataPoem(Poem):
 
         if database:
             self.database = database
+
+        # SPARQL Queries:
+        # Title of the Poem – used in: get_title()
+        self.sparql_title = PoemTitle()
+        # Year of Creation – used in: get_creation_year()
+        self.sparql_creation_year = PoemCreationYear()
 
     def __generate_id_by_uri(self) -> bool:
         """Helper method to generate a short md5 hash from the URI
