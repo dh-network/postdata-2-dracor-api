@@ -1,6 +1,6 @@
 import flask
 from flask import jsonify, Response, send_from_directory, request
-from apidoc import spec, ApiInfo, CorpusMetadata
+from apidoc import spec, ApiInfo, CorpusMetadata, PoemMetadata
 from sparql import DB
 from pd_corpora import PostdataCorpora
 import os
@@ -202,7 +202,8 @@ def get_corpus_metadata(corpusname:str):
                     application/json:
                         schema: CorpusMetadata
             404:
-                description: No such corpus.
+                description: No such corpus. Parameter ``corpusname`` is invalid. A list of valid values can be
+                    retrieved via the ``/corpora`` endpoint.
                 content:
                     text/plain:
                         schema:
@@ -223,16 +224,20 @@ def get_corpus_metadata(corpusname:str):
 
 
 @api.route("/corpora/<path:corpusname>/poems")
-def get_corpus_content(corpusname:str):
+def get_corpus_content(corpusname: str):
     """Corpus Content
 
     Args:
         corpusname: ID/name of the corpus, e.g. "postdata".
 
+    TODO: Define schema for response.
     ---
     get:
         summary: Corpus Contents
-        description: Returns metadata on the poems contained in a corpus.
+        description: Returns metadata on the poems contained in a corpus. Because generating the metadata of all
+            poems in a large corpus is quite cost intensive, per default only 500 items will be returned. Use parameters
+            ``limit`` and ``offset`` accordingly to get the full number of included poems. An alternative would be to
+            request all IDs of poems using the `/corpora/{corpusname}/ids` endpoint.
         operationId: get_corpus_content
         parameters:
             -   in: path
@@ -242,10 +247,86 @@ def get_corpus_content(corpusname:str):
                 example: postdata
                 schema:
                     type: string
+            -   in: query
+                name: limit
+                description: Number of items to return.
+                example: 20
+                default: 500
+                schema:
+                    type: integer
+            -   in: query
+                name: offset
+                description: number of item to start with. Counting starts at ``0``.
+                default: 0
+                schema:
+                    type: integer
+            -   in: query
+                name: include
+                description: include additional information, e.g. information on author(s) of a poem.
+                required: false
+                example: authors
+                schema:
+                    type: string
+                    enum:
+                        - authors
+        responses:
+            200:
+                description: Set of metadata items.
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items: PoemMetadata
+            400:
+                description: Invalid value of parameter "limit". Max. number of items to be returned is 500.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+            404:
+                description: No such corpus. Parameter ``corpusname`` is invalid. A list of valid values can be
+                    retrieved via the ``/corpora`` endpoint.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
     """
-    # TODO: implement "/corpora/{corpusname}/poems" endpoint
-    return f"Needs to be implemented! Would return content of {corpusname}."
+    if corpusname in corpora.corpora:
 
+        if "limit" in request.args:
+            limit = int(request.args["limit"])
+        else:
+            limit = 500
+
+        if "offset" in request.args:
+            offset = int(request.args["offset"])
+        else:
+            offset = 0
+
+        if "include" in request.args:
+            if request.args["include"] == "authors" or request.args["include"] == "author":
+                include_authors = True
+            else:
+                pass
+        else:
+            include_authors = False
+
+        if 0 < limit <= 500:
+            result_set = corpora.corpora[corpusname].get_metadata_of_poem_set(
+                offset=offset,
+                limit=limit,
+                include_authors=include_authors)
+            return jsonify(result_set)
+        else:
+            return Response(f"Invalid value of parameter limit. Maximum number of items to be returned: 500",
+                            status=400, mimetype="text/plain")
+
+    else:
+        return Response(f"No such corpus: {corpusname}", status=404,
+                        mimetype="text/plain")
+
+
+# End of the API Endpoints
 
 # Generate the OpenAPI Specification
 # This can not be moved to the apidoc module,

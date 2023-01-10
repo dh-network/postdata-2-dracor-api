@@ -29,6 +29,14 @@ class CorpusMetadata(Schema):
     metrics = fields.Nested(CorpusMetrics, required=False)
 
 
+class PoemMetadata(Schema):
+    id = fields.Str()
+    uri = fields.Str()
+    name = fields.Str()
+    source = fields.Str()
+    sourceUri = fields.Str()
+
+
 spec = APISpec(
     title="Poecor POSTDATA connector",
     version="1.0",

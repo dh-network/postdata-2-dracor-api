@@ -86,7 +86,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CorpusMetadata'
         '404':
-          description: No such corpus.
+          description: No such corpus. Parameter ``corpusname`` is invalid. A list
+            of valid values can be retrieved via the ``/corpora`` endpoint.
           content:
             text/plain:
               schema:
@@ -94,7 +95,11 @@ paths:
   /corpora/{corpusname}/poems:
     get:
       summary: Corpus Contents
-      description: Returns metadata on the poems contained in a corpus.
+      description: Returns metadata on the poems contained in a corpus. Because generating
+        the metadata of all poems in a large corpus is quite cost intensive, per default
+        only 500 items will be returned. Use parameters ``limit`` and ``offset`` accordingly
+        to get the full number of included poems. An alternative would be to request
+        all IDs of poems using the `/corpora/{corpusname}/ids` endpoint.
       operationId: get_corpus_content
       parameters:
       - in: path
@@ -104,43 +109,102 @@ paths:
         example: postdata
         schema:
           type: string
+      - in: query
+        name: limit
+        description: Number of items to return.
+        example: 20
+        default: 500
+        schema:
+          type: integer
+      - in: query
+        name: offset
+        description: number of item to start with. Counting starts at ``0``.
+        default: 0
+        schema:
+          type: integer
+      - in: query
+        name: include
+        description: include additional information, e.g. information on author(s)
+          of a poem.
+        required: false
+        example: authors
+        schema:
+          type: string
+          enum:
+          - authors
+      responses:
+        '200':
+          description: Set of metadata items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PoemMetadata'
+        '400':
+          description: Invalid value of parameter "limit". Max. number of items to
+            be returned is 500.
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: No such corpus. Parameter ``corpusname`` is invalid. A list
+            of valid values can be retrieved via the ``/corpora`` endpoint.
+          content:
+            text/plain:
+              schema:
+                type: string
 openapi: 3.0.3
 components:
   schemas:
     ApiInfo:
       type: object
       properties:
-        name:
-          type: string
         description:
           type: string
         version:
           type: string
+        name:
+          type: string
     CorpusMetrics:
       type: object
       properties:
-        verses:
-          type: integer
         words:
           type: integer
         metrical_syllables:
           type: integer
-        poems:
+        verses:
+          type: integer
+        stanzas:
           type: integer
         grammatical_syllables:
           type: integer
-        stanzas:
+        poems:
           type: integer
         authors:
           type: integer
     CorpusMetadata:
       type: object
       properties:
-        name:
-          type: string
-        title:
+        description:
           type: string
         metrics:
           $ref: '#/components/schemas/CorpusMetrics'
-        description:
+        title:
+          type: string
+        name:
+          type: string
+    PoemMetadata:
+      type: object
+      properties:
+        name:
+          type: string
+        sourceUri:
+          type: string
+        id:
+          type: string
+        uri:
+          type: string
+        source:
           type: string
