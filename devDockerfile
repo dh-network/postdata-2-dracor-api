@@ -43,6 +43,7 @@ COPY pd_stardog_queries.py /api
 COPY pd_corpora.py /api
 COPY pd_corpus.py /api
 COPY pd_poem.py /api
+COPY pd_author.py /api
 
 # configure the container to run in an executed manner
 ENTRYPOINT [ "python", "/api/api.py" ]
