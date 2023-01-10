@@ -347,8 +347,8 @@ def get_ids(corpusname: str):
                 name: type
                 description: Entity type for which IDs should be returned, e.g. "poem".
                 required: false
-                example: poems
-                default: poems
+                example: poem
+                default: poem
                 schema:
                     type: string
                     enum:
