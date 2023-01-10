@@ -255,3 +255,43 @@ class PostdataPoem(Poem):
             self.authors = None
             return False
 
+    def get_metadata(self, include_authors: bool = False) -> dict:
+        """Serialize (basic) metadata of a poem.
+
+        Request only the necessary attributes of a poem, e.g. to use in an instance
+        of "PostdataCorpus" when viewing all poems.
+
+        Returns:
+            dict: Basic Metadata on a poem.
+        """
+
+        """Example:
+        
+        {
+        'id': 'pd_0360be3e',
+        'uri': 'http://postdata.linhd.uned.es/resource/pw_lope-de-vega_1-al-sujeto-de-la-dama-que-le-dijo-dios-le-provea',
+        'name': 'lope-de-vega_1-al-sujeto-de-la-dama-que-le-dijo-dios-le-provea',
+        'title': '- 1 - Al sujeto de la dama que le dijo «Dios le provea» ',
+        'authors': [{'name': 'Lope de Vega',
+            'uri': 'http://postdata.linhd.uned.es/resource/p_lope-de-vega',
+            'refs': [{'ref': 'Q165257', 'type': 'wikidata'}]}],
+        'source': 'POSTDATA Poetry Lab',
+        'sourceUrl': 'http://poetry.linhd.uned.es:3000/en/author/lope-de-vega/poetic-work/1-al-sujeto-de-la-dama-que-le-dijo-dios-le-provea'
+        }
+        
+        """
+        metadata = dict(
+            id=self.id,
+            uri=self.uri,
+            name=self.name,
+            source=self.get_poetry_lab_url(),
+            sourceUri="POSTDATA Poetry Lab"
+        )
+
+        if include_authors:
+            if self.load_authors():
+                metadata["authors"] = list()
+                for author in self.authors:
+                    metadata["authors"].append(author.get_metadata())
+
+        return metadata
