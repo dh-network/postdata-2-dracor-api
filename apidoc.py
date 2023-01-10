@@ -29,12 +29,18 @@ class CorpusMetadata(Schema):
     metrics = fields.Nested(CorpusMetrics, required=False)
 
 
+class AuthorMetadata(Schema):
+    name = fields.Str()
+    uri = fields.Str()
+
+
 class PoemMetadata(Schema):
     id = fields.Str()
     uri = fields.Str()
     name = fields.Str()
     source = fields.Str()
     sourceUri = fields.Str()
+    authors = fields.List(fields.Nested(AuthorMetadata), required=False)
 
 
 spec = APISpec(

@@ -161,50 +161,61 @@ components:
     ApiInfo:
       type: object
       properties:
-        description:
-          type: string
         version:
           type: string
         name:
           type: string
+        description:
+          type: string
     CorpusMetrics:
       type: object
       properties:
-        words:
+        grammatical_syllables:
+          type: integer
+        authors:
           type: integer
         metrical_syllables:
           type: integer
-        verses:
-          type: integer
         stanzas:
           type: integer
-        grammatical_syllables:
+        verses:
+          type: integer
+        words:
           type: integer
         poems:
-          type: integer
-        authors:
           type: integer
     CorpusMetadata:
       type: object
       properties:
-        description:
-          type: string
         metrics:
           $ref: '#/components/schemas/CorpusMetrics'
-        title:
-          type: string
         name:
           type: string
-    PoemMetadata:
+        title:
+          type: string
+        description:
+          type: string
+    AuthorMetadata:
       type: object
       properties:
         name:
           type: string
+        uri:
+          type: string
+    PoemMetadata:
+      type: object
+      properties:
         sourceUri:
           type: string
         id:
           type: string
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorMetadata'
         uri:
+          type: string
+        name:
           type: string
         source:
           type: string
