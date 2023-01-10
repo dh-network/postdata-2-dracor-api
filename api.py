@@ -336,6 +336,13 @@ def get_ids(corpusname: str):
         description: Returns IDs of entities of a certain "type" in a corpus. Currently, only "poems" is implemented.
         operationId: get_entity_ids
         parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
             -   in: query
                 name: type
                 description: Entity type for which IDs should be returned, e.g. "poems".
