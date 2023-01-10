@@ -381,7 +381,7 @@ class PostdataCorpus(Corpus):
 
         Args:
             id (str, optional): Poem ID.
-            uri (str, optional)
+            uri (str, optional): URI of the Poem.
 
         Returns:
             bool: True if successful
@@ -420,3 +420,37 @@ class PostdataCorpus(Corpus):
                         raise Exception("Can not load poem. No database connection.")
         else:
             raise Exception("Either ID or URI of a poem must be supplied!")
+
+    def load_poem_set(self, limit: int = 500, offset: int = 0) -> bool:
+        """Load a set of poems.
+
+        Depending on "self.poem_uris" a set of poems will be loaded using the method "load_poem".
+
+        Args:
+            limit (int): Number of poems to load.
+            offset (int): position to start at (in the list of poem_uris).
+
+        Returns:
+            bool: True if operation ran through. Need to check if all poems are loaded.
+        """
+        uri_set = self.get_uri_set(limit=limit, offset=offset)
+        for poem_uri in uri_set:
+            self.load_poem(uri=poem_uri)
+        # TODO: Maybe implement better error handling or a check if poems were loaded at all.
+        return True
+
+    def load_poems(self) -> bool:
+        """Load all poems.
+
+        Returns:
+            bool: True if operation ran through. Need to check if all poems are loaded.
+        """
+        if self.poem_uris:
+            pass
+        else:
+            self.get_poem_uris()
+
+        for poem_uri in self.poem_uris:
+            self.load_poem(uri=poem_uri)
+        return True
+
