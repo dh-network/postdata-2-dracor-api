@@ -1,5 +1,6 @@
 from sparql import DB
 from corpus import Corpus
+from pd_poem import PostdataPoem
 from util import shorthash
 from pd_stardog_queries import PoeticWorkUris, CountPoeticWorks, CountAuthors, CountStanzas, CountVerses, CountWords, \
     CountMetricalSyllables, CountGrammaticalSyllables
@@ -30,7 +31,7 @@ class PostdataCorpus(Corpus):
     # To look-up poem IDs (dict)
     __poem_ids = None
 
-    # Poems of a corpus
+    # Poems of a corpus. Dictionary with instances of PostdataPoem
     poems = None
 
     def __init__(self, database: DB = None):
@@ -355,8 +356,6 @@ class PostdataCorpus(Corpus):
 
         return metadata
 
-    # TODO: Method to load URI sets (100 poem_uris starting at n)
-    # limit = 20 & offset = 20
     def get_uri_set(self, limit: int = 500, offset: int = 0) -> list:
         """Get a set of uris.
 
@@ -374,3 +373,50 @@ class PostdataCorpus(Corpus):
 
         return self.poem_uris[offset:limit]
 
+    def load_poem(self, id: str = None, uri:str = None) -> bool:
+        """Load a poem of the corpus.
+
+        Either "id" or "uri" must be supplied as keyword argument. Will add an instance of PostdataPoem to self.poems
+        while the key will be the Poem ID "id".
+
+        Args:
+            id (str, optional): Poem ID.
+            uri (str, optional)
+
+        Returns:
+            bool: True if successful
+        """
+        if id or uri:
+
+            if id:
+                poem_id = id
+            else:
+                poem_id = self.__generate_poem_id_by_poem_uri(uri)
+
+            if uri:
+                poem_uri = uri
+            else:
+                poem_uri = self.get_poem_uri_by_id(id)
+
+            if poem_id and poem_uri:
+
+                # need to check if there are already loaded poems, if not, create a dictionary to hold the poems
+                if self.poems:
+                    pass
+                else:
+                    self.poems = dict()
+
+                if poem_id in self.poems:
+                    # already loaded
+                    return True
+                else:
+                    # not loaded, need to initialize a new poem and add to poem
+                    # need to have a database connection
+                    if self.database:
+                        poem = PostdataPoem(uri=poem_uri, database=self.database)
+                        self.poems[poem_id] = poem
+                        return True
+                    else:
+                        raise Exception("Can not load poem. No database connection.")
+        else:
+            raise Exception("Either ID or URI of a poem must be supplied!")
