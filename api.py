@@ -333,7 +333,7 @@ def get_ids(corpusname: str):
     ---
     get:
         summary: Entity IDs
-        description: Returns IDs of entities of a certain "type" in a corpus. Currently, only "poems" is implemented.
+        description: Returns IDs of entities of a certain "type" in a corpus. Currently, only "poem" is implemented.
         operationId: get_entity_ids
         parameters:
             -   in: path
@@ -345,14 +345,14 @@ def get_ids(corpusname: str):
                     type: string
             -   in: query
                 name: type
-                description: Entity type for which IDs should be returned, e.g. "poems".
+                description: Entity type for which IDs should be returned, e.g. "poem".
                 required: false
                 example: poems
                 default: poems
                 schema:
                     type: string
                     enum:
-                        - poems
+                        - poem
         responses:
             200:
                 description: IDs of entities of a certain type.
@@ -379,11 +379,15 @@ def get_ids(corpusname: str):
     if corpusname in corpora.corpora:
 
         if "type" in request.args:
-            entity_type = request.args["type"]
+            if request.args["type"] == "poem" or request.args["type"] == "poems":
+                entity_type = "poem"
+            else:
+                # this will result in 400 later
+                entity_type = request.args["type"]
         else:
-            entity_type = "poems"
+            entity_type = "poem"
 
-        if entity_type == "poems":
+        if entity_type == "poem":
             # need to load the poems
             corpora.corpora[corpusname].load_poems()
             poem_ids = list(corpora.corpora[corpusname].poems.keys())
