@@ -175,18 +175,65 @@ def get_corpora():
 
 
 @api.route("/corpora/<path:corpusname>", methods=["GET"])
-def get_corpus_content(corpusname:str):
-    """List corpus content.
-
+def get_corpus_metadata(corpusname:str):
+    """Corpus Metadata
 
     Args:
         corpusname: ID/name of the corpus, e.g. "postdata".
 
     ---
     get:
-        summary: List corpus content
-        description: Returns a list poems in a corpus
-        operationId: get_corpus
+        summary: Corpus Metadata
+        description: Returns metadata on a corpus. Unlike the DraCor API the response does not contain information
+            on included corpus items (poems). Use the endpoint ``/corpora/{corpusname}/poems`` instead.
+        operationId: get_corpus_metadata
+        parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
+        responses:
+            200:
+                description: Corpus metadata.
+                content:
+                    application/json:
+                        schema: CorpusMetadata
+            404:
+                description: No such corpus.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+    """
+    if corpusname in corpora.corpora:
+        metadata = corpora.corpora[corpusname].get_metadata(include_metrics=True)
+
+        # Validate response with schema "CorpusMetadata"
+        schema = CorpusMetadata()
+        schema.load(metadata)
+
+        return jsonify(schema.dump(metadata))
+
+    else:
+        return Response(f"No such corpus: {corpusname}", status=404,
+                        mimetype="text/plain")
+
+
+@api.route("/corpora/<path:corpusname>/poems")
+def get_corpus_content(corpusname:str):
+    """Corpus Content
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+
+    ---
+    get:
+        summary: Corpus Contents
+        description: Returns metadata on the poems contained in a corpus.
+        operationId: get_corpus_content
         parameters:
             -   in: path
                 name: corpusname
@@ -196,8 +243,8 @@ def get_corpus_content(corpusname:str):
                 schema:
                     type: string
     """
-    # TODO: implement "/corpora/{corpusname}" endpoint
-    return f"Needs to be implemented! Would return contents of {corpusname}."
+    # TODO: implement "/corpora/{corpusname}/poems" endpoint
+    return f"Needs to be implemented! Would return content of {corpusname}."
 
 
 # Generate the OpenAPI Specification
@@ -206,6 +253,7 @@ def get_corpus_content(corpusname:str):
 with api.test_request_context():
     spec.path(view=get_info)
     spec.path(view=get_corpora)
+    spec.path(view=get_corpus_metadata)
     spec.path(view=get_corpus_content)
 
 # write the OpenAPI Specification as YAML to the root folder

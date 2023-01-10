@@ -65,9 +65,37 @@ paths:
                 type: string
   /corpora/{corpusname}:
     get:
-      summary: List corpus content
-      description: Returns a list poems in a corpus
-      operationId: get_corpus
+      summary: Corpus Metadata
+      description: Returns metadata on a corpus. Unlike the DraCor API the response
+        does not contain information on included corpus items (poems). Use the endpoint
+        ``/corpora/{corpusname}/poems`` instead.
+      operationId: get_corpus_metadata
+      parameters:
+      - in: path
+        name: corpusname
+        description: Name/ID of the corpus.
+        required: true
+        example: postdata
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Corpus metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusMetadata'
+        '404':
+          description: No such corpus.
+          content:
+            text/plain:
+              schema:
+                type: string
+  /corpora/{corpusname}/poems:
+    get:
+      summary: Corpus Contents
+      description: Returns metadata on the poems contained in a corpus.
+      operationId: get_corpus_content
       parameters:
       - in: path
         name: corpusname
@@ -91,19 +119,19 @@ components:
     CorpusMetrics:
       type: object
       properties:
-        poems:
-          type: integer
-        metrical_syllables:
-          type: integer
-        grammatical_syllables:
+        verses:
           type: integer
         words:
           type: integer
-        authors:
+        metrical_syllables:
+          type: integer
+        poems:
+          type: integer
+        grammatical_syllables:
           type: integer
         stanzas:
           type: integer
-        verses:
+        authors:
           type: integer
     CorpusMetadata:
       type: object
@@ -112,7 +140,7 @@ components:
           type: string
         title:
           type: string
-        description:
-          type: string
         metrics:
           $ref: '#/components/schemas/CorpusMetrics'
+        description:
+          type: string
