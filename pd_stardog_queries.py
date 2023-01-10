@@ -31,43 +31,6 @@ class PdStardogQuery(SparqlQuery):
     ]
 
 
-class AuthorsOfPoem(PdStardogQuery):
-    """SPARQL Query: Author(s) of a poem"""
-
-    label = "Author(s) of a Poem"
-
-    description = """
-    For a single poem with a "poem_uri" the query returns all URIs of "agents"
-    that have the "roleFunction" of "creator" in a relation to a "WorkConception".
-    Optionally, it returns a sample name of the author.
-    """
-
-    template = """
-    SELECT ?Agent (SAMPLE(?Name) AS ?Name)  WHERE {
-        <$1> a pdc:PoeticWork ;
-            pdc:wasInitiatedBy ?WorkConception .
-
-        ?WorkConception pdc:hasAgentRole ?AgentRole .
-
-        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ;
-            pdc:hasAgent ?Agent .
-
-        OPTIONAL {
-            ?Agent pdc:name ?Name .
-        }
-    }
-    GROUP BY ?Agent
-    """
-
-    variables = [
-        {
-            "id": "poem_uri",
-            "class": "pdc:PoeticWork",
-            "description":  "URI of a Poem."
-        }
-    ]
-
-
 class PoeticWorkUris(PdStardogQuery):
     """SPARQL Query: URIs of instances of the class PoeticWork"""
 
@@ -203,6 +166,176 @@ class CountMetricalSyllables(PdStardogQuery):
     } 
     """
 
+
+class PoemTitle(PdStardogQuery):
+    """SPARQL Query: Get Title of a Poem"""
+
+    label = "Title of a Poem"
+
+    description = """
+    For a single poem (pdc:PoeticWork) with a "poem_uri" the query returns all titles (via property pdc:title).
+    """
+
+    template = """
+    SELECT ?title FROM <tag:stardog:api:context:local> WHERE {
+        <$1> a pdc:PoeticWork ;
+            pdc:title ?title.
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
+class PoemCreationYear(PdStardogQuery):
+    """SPARQL Query: Get Creation Year of a Poem"""
+
+    label = "Creation Year of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the query returns the value of the Time Span of of the Creation Activity 
+    that resulted (pdc:initiated) in the Work.
+    """
+
+    template = """
+    SELECT ?CreationDate FROM <tag:stardog:api:context:local> WHERE {
+        ?Creation pdc:initiated <$1>;
+              pdc:hasTimeSpan ?ts.
+  
+      ?ts pdc:date ?CreationDate.
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
+class PoemAuthors(PdStardogQuery):
+    """SPARQL Query: Author(s) of a poem"""
+
+    label = "Author(s) of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the query returns all URIs of "agents"
+    that have the "roleFunction" of "creator" in a relation to a "WorkConception".
+    Optionally, it returns a sample name of the author.
+    """
+
+    template = """
+    SELECT ?Agent (SAMPLE(?Name) AS ?Name)  WHERE {
+        <$1> a pdc:PoeticWork ;
+            pdc:wasInitiatedBy ?WorkConception .
+
+        ?WorkConception pdc:hasAgentRole ?AgentRole .
+
+        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ;
+            pdc:hasAgent ?Agent .
+
+        OPTIONAL {
+            ?Agent pdc:name ?Name .
+        }
+    }
+    GROUP BY ?Agent
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description":  "URI of a Poem."
+        }
+    ]
+
+
+class PoemAuthorUris(PdStardogQuery):
+    """SPARQL Query: URI(s) of Author(s) of a poem"""
+
+    label = "URI(s) of Author(s) of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the query returns all URIs of "agents"
+    that have the "roleFunction" of "creator" in a relation to a "WorkConception".
+    """
+
+    template = """
+    SELECT ?uri  WHERE {
+        <$1> a pdc:PoeticWork ;
+            pdc:wasInitiatedBy ?WorkConception .
+
+        ?WorkConception pdc:hasAgentRole ?AgentRole .
+
+        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ;
+            pdc:hasAgent ?uri .
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
+class AuthorNames(PdStardogQuery):
+    """SPARQL Query: Name(s) of an Author"""
+
+    label = "Name(s) of an Author"
+
+    description = """
+    For a single author (pdc:person) with an "author_uri" the query returns all names attached 
+    via the property "pdc:name".
+    """
+
+    template = """
+    SELECT ?Name FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:name ?Name .
+    }
+    """
+
+    variables = [
+        {
+            "id": "author_uri",
+            "class": "pdc:Person",
+            "description": "URI of an Author."
+        }
+    ]
+
+
+class AuthorSameAs(PdStardogQuery):
+    """SPARQL Query: URI of an Author in an External Reference Resource"""
+
+    label = "External Reference Resource URI of an author"
+
+    description = """
+    For a single author (pdc:person) with an "author_uri" the query returns this author's URIs in external reference
+    resources, that are attached via the property owl:sameAs. Normally, this is a URI of a Wikidata Item.
+    """
+
+    template = """
+    SELECT ?uri FROM <tag:stardog:api:context:local> WHERE {
+        <$1> owl:sameAs ?uri .
+    }
+    """
+
+    variables = [
+        {
+            "id": "author_uri",
+            "class": "pdc:Person",
+            "description": "URI of an Author."
+        }
+    ]
 
 
 

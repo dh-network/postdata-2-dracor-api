@@ -1,8 +1,8 @@
 import flask
 from flask import jsonify, Response, send_from_directory, request
-from apidoc import spec, ApiInfo, CorpusMetadata
+from apidoc import spec, ApiInfo, CorpusMetadata, PoemMetadata
 from sparql import DB
-from core import PostdataCorpora
+from pd_corpora import PostdataCorpora
 import os
 import json
 
@@ -125,7 +125,6 @@ def get_info():
 def get_corpora():
     """Lists available corpora
 
-    # TODO: define response schema. this is tricky, because marshmallow allows for dictionaries only.
     ---
     get:
         summary: List available corpora
@@ -175,12 +174,243 @@ def get_corpora():
     return jsonify(response_data)
 
 
+@api.route("/corpora/<path:corpusname>", methods=["GET"])
+def get_corpus_metadata(corpusname:str):
+    """Corpus Metadata
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+
+    ---
+    get:
+        summary: Corpus Metadata
+        description: Returns metadata on a corpus. Unlike the DraCor API the response does not contain information
+            on included corpus items (poems). Use the endpoint ``/corpora/{corpusname}/poems`` instead.
+        operationId: get_corpus_metadata
+        parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
+        responses:
+            200:
+                description: Corpus metadata.
+                content:
+                    application/json:
+                        schema: CorpusMetadata
+            404:
+                description: No such corpus. Parameter ``corpusname`` is invalid. A list of valid values can be
+                    retrieved via the ``/corpora`` endpoint.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+    """
+    if corpusname in corpora.corpora:
+        metadata = corpora.corpora[corpusname].get_metadata(include_metrics=True)
+
+        # Validate response with schema "CorpusMetadata"
+        schema = CorpusMetadata()
+        schema.load(metadata)
+
+        return jsonify(schema.dump(metadata))
+
+    else:
+        return Response(f"No such corpus: {corpusname}", status=404,
+                        mimetype="text/plain")
+
+
+@api.route("/corpora/<path:corpusname>/poems")
+def get_corpus_content(corpusname: str):
+    """Corpus Content
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+    ---
+    get:
+        summary: Corpus Contents
+        description: Returns metadata on the poems contained in a corpus. Because generating the metadata of all
+            poems in a large corpus is quite cost intensive, per default only 500 items will be returned. Use parameters
+            ``limit`` and ``offset`` accordingly to get the full number of included poems. An alternative would be to
+            request all IDs of poems using the `/corpora/{corpusname}/ids` endpoint.
+        operationId: get_corpus_content
+        parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
+            -   in: query
+                name: limit
+                description: Number of items to return.
+                example: 20
+                default: 500
+                schema:
+                    type: integer
+            -   in: query
+                name: offset
+                description: number of item to start with. Counting starts at ``0``.
+                default: 0
+                schema:
+                    type: integer
+            -   in: query
+                name: include
+                description: include additional information, e.g. information on author(s) of a poem.
+                required: false
+                example: authors
+                schema:
+                    type: string
+                    enum:
+                        - authors
+        responses:
+            200:
+                description: Set of metadata items.
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items: PoemMetadata
+            400:
+                description: Invalid value of parameter "limit". Max. number of items to be returned is 500.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+            404:
+                description: No such corpus. Parameter ``corpusname`` is invalid. A list of valid values can be
+                    retrieved via the ``/corpora`` endpoint.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+    """
+    if corpusname in corpora.corpora:
+
+        if "limit" in request.args:
+            limit = int(request.args["limit"])
+        else:
+            limit = 500
+
+        if "offset" in request.args:
+            offset = int(request.args["offset"])
+        else:
+            offset = 0
+
+        if "include" in request.args:
+            if request.args["include"] == "authors" or request.args["include"] == "author":
+                include_authors = True
+            else:
+                pass
+        else:
+            include_authors = False
+
+        if 0 < limit <= 500:
+            result_set = corpora.corpora[corpusname].get_metadata_of_poem_set(
+                offset=offset,
+                limit=limit,
+                include_authors=include_authors)
+            return jsonify(result_set)
+        else:
+            return Response(f"Invalid value of parameter limit. Maximum number of items to be returned: 500",
+                            status=400, mimetype="text/plain")
+
+    else:
+        return Response(f"No such corpus: {corpusname}", status=404,
+                        mimetype="text/plain")
+
+
+@api.route("/corpora/<path:corpusname>/ids")
+def get_ids(corpusname: str):
+    """Get IDs of entities in the corpus.
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+    ---
+    get:
+        summary: Entity IDs
+        description: Returns IDs of entities of a certain "type" in a corpus. Currently, only "poem" is implemented.
+        operationId: get_entity_ids
+        parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
+            -   in: query
+                name: type
+                description: Entity type for which IDs should be returned, e.g. "poem".
+                required: false
+                example: poem
+                default: poem
+                schema:
+                    type: string
+                    enum:
+                        - poem
+        responses:
+            200:
+                description: IDs of entities of a certain type.
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: string
+            400:
+                description: Invalid value of parameter "type". Only "poem" is implemented.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+            404:
+                description: No such corpus. Parameter ``corpusname`` is invalid. A list of valid values can be
+                    retrieved via the ``/corpora`` endpoint.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+    """
+    if corpusname in corpora.corpora:
+
+        if "type" in request.args:
+            if request.args["type"] == "poem" or request.args["type"] == "poems":
+                entity_type = "poem"
+            else:
+                # this will result in 400 later
+                entity_type = request.args["type"]
+        else:
+            entity_type = "poem"
+
+        if entity_type == "poem":
+            # need to load the poems
+            corpora.corpora[corpusname].load_poems()
+            poem_ids = list(corpora.corpora[corpusname].poems.keys())
+            return jsonify(poem_ids)
+        else:
+            return Response(f"Invalid value of parameter 'type'. Only allowed value is 'poems'.",
+                            status=400, mimetype="text/plain")
+    else:
+        return Response(f"No such corpus: {corpusname}", status=404,
+                        mimetype="text/plain")
+
+
+# End of the API Endpoints
+
 # Generate the OpenAPI Specification
 # This can not be moved to the apidoc module,
 # because to generate the Documentation, we need the flask API to be runnable
 with api.test_request_context():
     spec.path(view=get_info)
     spec.path(view=get_corpora)
+    spec.path(view=get_corpus_metadata)
+    spec.path(view=get_corpus_content)
+    spec.path(view=get_ids)
 
 # write the OpenAPI Specification as YAML to the root folder
 with open('openapi.yaml', 'w') as f:

@@ -1,5 +1,5 @@
 """Core functionality. Maybe this module is obsolete and more of a util"""
-# TODO: maybe split this up into separate modules
+import hashlib
 
 
 # Stuff to move somewhere else follows below
@@ -37,4 +37,19 @@ def inject(
         n = n + 1
 
     return query
+
+
+def shorthash(textstring: str, chars: int = 8) -> str:
+    """Create a trunctaded md5 hash of a string
+
+    Args:
+        textstring: Text to produce a shorthash from.
+        chars (int): length of shorted hash. Defaults to 8.
+
+    Returns:
+        str: shorted md5hash
+    """
+    hashed = hashlib.sha1(textstring.encode("UTF-8")).hexdigest()
+    shorthash = hashed[:chars]
+    return shorthash
 
