@@ -155,6 +155,45 @@ paths:
             text/plain:
               schema:
                 type: string
+  /corpora/{corpusname}/ids:
+    get:
+      summary: Entity IDs
+      description: Returns IDs of entities of a certain "type" in a corpus. Currently,
+        only "poems" is implemented.
+      operationId: get_entity_ids
+      parameters:
+      - in: query
+        name: type
+        description: Entity type for which IDs should be returned, e.g. "poems".
+        required: false
+        example: poems
+        default: poems
+        schema:
+          type: string
+          enum:
+          - poems
+      responses:
+        '200':
+          description: IDs of entities of a certain type.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Invalid value of parameter "type". Only "poems" is implemented.
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: No such corpus. Parameter ``corpusname`` is invalid. A list
+            of valid values can be retrieved via the ``/corpora`` endpoint.
+          content:
+            text/plain:
+              schema:
+                type: string
 openapi: 3.0.3
 components:
   schemas:
@@ -170,28 +209,28 @@ components:
     CorpusMetrics:
       type: object
       properties:
+        verses:
+          type: integer
         grammatical_syllables:
           type: integer
-        authors:
+        poems:
           type: integer
         metrical_syllables:
           type: integer
-        stanzas:
-          type: integer
-        verses:
-          type: integer
         words:
           type: integer
-        poems:
+        authors:
+          type: integer
+        stanzas:
           type: integer
     CorpusMetadata:
       type: object
       properties:
         metrics:
           $ref: '#/components/schemas/CorpusMetrics'
-        name:
-          type: string
         title:
+          type: string
+        name:
           type: string
         description:
           type: string
@@ -205,17 +244,17 @@ components:
     PoemMetadata:
       type: object
       properties:
-        sourceUri:
-          type: string
-        id:
-          type: string
         authors:
           type: array
           items:
             $ref: '#/components/schemas/AuthorMetadata'
-        uri:
+        sourceUri:
           type: string
         name:
           type: string
         source:
+          type: string
+        id:
+          type: string
+        uri:
           type: string

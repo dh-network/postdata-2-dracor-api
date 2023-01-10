@@ -229,8 +229,6 @@ def get_corpus_content(corpusname: str):
 
     Args:
         corpusname: ID/name of the corpus, e.g. "postdata".
-
-    TODO: Define schema for response.
     ---
     get:
         summary: Corpus Contents
@@ -326,6 +324,71 @@ def get_corpus_content(corpusname: str):
                         mimetype="text/plain")
 
 
+@api.route("/corpora/<path:corpusname>/ids")
+def get_ids(corpusname: str):
+    """Get IDs of entities in the corpus.
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+    ---
+    get:
+        summary: Entity IDs
+        description: Returns IDs of entities of a certain "type" in a corpus. Currently, only "poems" is implemented.
+        operationId: get_entity_ids
+        parameters:
+            -   in: query
+                name: type
+                description: Entity type for which IDs should be returned, e.g. "poems".
+                required: false
+                example: poems
+                default: poems
+                schema:
+                    type: string
+                    enum:
+                        - poems
+        responses:
+            200:
+                description: IDs of entities of a certain type.
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: string
+            400:
+                description: Invalid value of parameter "type". Only "poems" is implemented.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+            404:
+                description: No such corpus. Parameter ``corpusname`` is invalid. A list of valid values can be
+                    retrieved via the ``/corpora`` endpoint.
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+    """
+    if corpusname in corpora.corpora:
+
+        if "type" in request.args:
+            entity_type = request.args["type"]
+        else:
+            entity_type = "poems"
+
+        if entity_type == "poems":
+            # need to load the poems
+            corpora.corpora[corpusname].load_poems()
+            poem_ids = list(corpora.corpora[corpusname].poems.keys())
+            return jsonify(poem_ids)
+        else:
+            return Response(f"Invalid value of parameter 'type'. Only allowed value is 'poems'.",
+                            status=400, mimetype="text/plain")
+    else:
+        return Response(f"No such corpus: {corpusname}", status=404,
+                        mimetype="text/plain")
+
+
 # End of the API Endpoints
 
 # Generate the OpenAPI Specification
@@ -336,6 +399,7 @@ with api.test_request_context():
     spec.path(view=get_corpora)
     spec.path(view=get_corpus_metadata)
     spec.path(view=get_corpus_content)
+    spec.path(view=get_ids)
 
 # write the OpenAPI Specification as YAML to the root folder
 with open('openapi.yaml', 'w') as f:
