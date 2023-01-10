@@ -11,6 +11,7 @@ class PostdataCorpus(Corpus):
     Attributes:
         database (DB): Database Connection
         poem_uris(list): URIs of poems in the corpus.
+        poems (dict): Poems of a corpus. Dictionary key is a poem ID, value an instance of PostdataPoem.
     """
     name = "postdata"
 
@@ -29,7 +30,8 @@ class PostdataCorpus(Corpus):
     # To look-up poem IDs (dict)
     __poem_ids = None
 
-    # TODO: Load all poems of a corpus? Is this a good idea?
+    # Poems of a corpus
+    poems = None
 
     def __init__(self, database: DB = None):
         """
@@ -355,3 +357,20 @@ class PostdataCorpus(Corpus):
 
     # TODO: Method to load URI sets (100 poem_uris starting at n)
     # limit = 20 & offset = 20
+    def get_uri_set(self, limit: int = 500, offset: int = 0) -> list:
+        """Get a set of uris.
+
+        Args:
+            limit (int): Number of URIs to include in a set.
+            offset (int): position to start at.
+
+        Returns:
+            list: Set of uris.
+        """
+        if self.poem_uris:
+            pass
+        else:
+            self.get_poem_uris()
+
+        return self.poem_uris[offset:limit]
+
