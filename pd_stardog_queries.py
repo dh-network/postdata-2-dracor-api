@@ -257,6 +257,37 @@ class PoemAuthors(PdStardogQuery):
     ]
 
 
+class PoemAuthorUris(PdStardogQuery):
+    """SPARQL Query: URI(s) of Author(s) of a poem"""
+
+    label = "URI(s) of Author(s) of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the query returns all URIs of "agents"
+    that have the "roleFunction" of "creator" in a relation to a "WorkConception".
+    """
+
+    template = """
+    SELECT ?uri  WHERE {
+        <$1> a pdc:PoeticWork ;
+            pdc:wasInitiatedBy ?WorkConception .
+
+        ?WorkConception pdc:hasAgentRole ?AgentRole .
+
+        ?AgentRole pdc:roleFunction <http://postdata.linhd.uned.es/kos/Creator> ;
+            pdc:hasAgent ?uri .
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
 class AuthorNames(PdStardogQuery):
     """SPARQL Query: Name(s) of an Author"""
 
