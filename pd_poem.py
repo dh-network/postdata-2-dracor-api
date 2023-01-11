@@ -3,7 +3,7 @@ from poem import Poem
 from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
 from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri, \
-    PoemCountStanzas
+    PoemCountStanzas, PoemCountLines, PoemCountWords
 
 # TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
 # The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
@@ -343,11 +343,36 @@ class PostdataPoem(Poem):
 
         Uses a SPARQL Query of class "PoemCountStanzas" of the module "pd_stardog_queries".
 
-
         Returns:
             int: Number of Stanzas
         """
         query = PoemCountStanzas()
+        results = self.__execute_sparql_query(query)
+        mapping = {"count": {"datatype": "int"}}
+        return results.simplify(mapping=mapping)[0]
+
+    def get_number_of_lines(self) -> int:
+        """Count Lines of a Poem.
+
+        Uses a SPARQL Query of class "PoemCountLines" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of Lines.
+        """
+        query = PoemCountLines()
+        results = self.__execute_sparql_query(query)
+        mapping = {"count": {"datatype": "int"}}
+        return results.simplify(mapping=mapping)[0]
+
+    def get_number_of_words(self) -> int:
+        """Count Words of a Poem.
+
+        Uses a SPARQL Query of class "PoemCountWords" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of Words.
+        """
+        query = PoemCountWords()
         results = self.__execute_sparql_query(query)
         mapping = {"count": {"datatype": "int"}}
         return results.simplify(mapping=mapping)[0]
@@ -402,8 +427,8 @@ class PostdataPoem(Poem):
             analysis = dict(
                 source=source,
                 numOfStanzas=self.get_number_of_stanzas(),
-                # numOfLines
-                # numOfWords
+                numOfLines=self.get_number_of_lines(),
+                numOfWords=self.get_number_of_words(),
                 # numOfLinesInStanzas
                 # rhymeSchemesOfStanzas
                 # numOfMetricalSyllables

@@ -406,6 +406,76 @@ class PoemCountStanzas(PdStardogQuery):
     ]
 
 
+class PoemCountLines(PdStardogQuery):
+    """SPARQL Query: Count Verse Lines of a Poem"""
+
+    label = "Count Verse Lines of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the number of verse lines is returned. The result is based on an automatic
+    scansion.
+    """
+
+    template = """
+    SELECT (COUNT(?Line) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:isRealisedThrough ?Redaction .
+    
+        ?Redaction pdp:wasInputFor ?ScansionProcess .
+    
+        ?ScansionProcess pdp:generated ?Scansion .
+    
+        ?Scansion pdp:typeOfScansion <http://postdata.linhd.uned.es/kos/automaticscansion> ;
+              pdp:hasStanza ?Stanza .
+    
+        ?Stanza pdp:hasLine ?Line .
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
+class PoemCountWords(PdStardogQuery):
+    """SPARQL Query: Count Words of a Poem"""
+
+    label = "Count Words of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the number of words is returned. The result is based on an automatic
+    scansion.
+    """
+
+    template = """
+    SELECT (COUNT(?Word) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:isRealisedThrough ?Redaction .
+    
+        ?Redaction pdp:wasInputFor ?ScansionProcess .
+    
+        ?ScansionProcess pdp:generated ?Scansion .
+    
+        ?Scansion pdp:typeOfScansion <http://postdata.linhd.uned.es/kos/automaticscansion> ;
+              pdp:hasStanza ?Stanza .
+    
+        ?Stanza pdp:hasLine ?Line .
+    
+        ?Line pdp:hasWord ?Word .
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
 
 
 
