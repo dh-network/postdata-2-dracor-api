@@ -159,7 +159,7 @@ paths:
     get:
       summary: Entity IDs
       description: Returns IDs of entities of a certain "type" in a corpus. Currently,
-        only "poems" is implemented.
+        only "poem" is implemented.
       operationId: get_entity_ids
       parameters:
       - in: path
@@ -171,14 +171,14 @@ paths:
           type: string
       - in: query
         name: type
-        description: Entity type for which IDs should be returned, e.g. "poems".
+        description: Entity type for which IDs should be returned, e.g. "poem".
         required: false
-        example: poems
-        default: poems
+        example: poem
+        default: poem
         schema:
           type: string
           enum:
-          - poems
+          - poem
       responses:
         '200':
           description: IDs of entities of a certain type.
@@ -189,7 +189,7 @@ paths:
                 items:
                   type: string
         '400':
-          description: Invalid value of parameter "type". Only "poems" is implemented.
+          description: Invalid value of parameter "type". Only "poem" is implemented.
           content:
             text/plain:
               schema:
@@ -207,39 +207,39 @@ components:
     ApiInfo:
       type: object
       properties:
-        version:
+        description:
           type: string
         name:
           type: string
-        description:
+        version:
           type: string
     CorpusMetrics:
       type: object
       properties:
-        words:
-          type: integer
-        poems:
-          type: integer
-        stanzas:
-          type: integer
-        metrical_syllables:
-          type: integer
         authors:
+          type: integer
+        grammatical_syllables:
+          type: integer
+        words:
           type: integer
         verses:
           type: integer
-        grammatical_syllables:
+        stanzas:
+          type: integer
+        poems:
+          type: integer
+        metrical_syllables:
           type: integer
     CorpusMetadata:
       type: object
       properties:
-        metrics:
-          $ref: '#/components/schemas/CorpusMetrics'
-        name:
+        description:
           type: string
         title:
           type: string
-        description:
+        metrics:
+          $ref: '#/components/schemas/CorpusMetrics'
+        name:
           type: string
     AuthorMetadata:
       type: object
@@ -253,15 +253,15 @@ components:
       properties:
         sourceUri:
           type: string
-        uri:
-          type: string
-        name:
-          type: string
-        source:
-          type: string
         authors:
           type: array
           items:
             $ref: '#/components/schemas/AuthorMetadata'
+        uri:
+          type: string
+        source:
+          type: string
         id:
+          type: string
+        name:
           type: string
