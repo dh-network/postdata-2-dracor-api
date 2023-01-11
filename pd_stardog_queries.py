@@ -287,6 +287,8 @@ class PoemAuthorUris(PdStardogQuery):
         }
     ]
 
+# Queries providing data on the author
+
 
 class AuthorNames(PdStardogQuery):
     """SPARQL Query: Name(s) of an Author"""
@@ -336,6 +338,43 @@ class AuthorSameAs(PdStardogQuery):
             "description": "URI of an Author."
         }
     ]
+
+# Queries used to assemble data of an automatic analysis
+
+
+class PoemAutomaticScansionUri(PdStardogQuery):
+    """SPARQL Query: URI of an Automatic Scansion of a Poem"""
+
+    label = "Automatic Scansion of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" an the URI of the result ("Scansion"; 
+    http://postdata.linhd.uned.es/kos/automaticscansion) of an automatic analysis process ("Scansion Process") is 
+    returned.
+    """
+
+    template = """
+    SELECT ?Scansion FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:isRealisedThrough ?Redaction .
+    
+        ?Redaction pdp:wasInputFor ?ScansionProcess .
+    
+        ?ScansionProcess pdp:generated ?Scansion .
+    
+        ?Scansion pdp:typeOfScansion <http://postdata.linhd.uned.es/kos/automaticscansion> .
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
+
 
 
 

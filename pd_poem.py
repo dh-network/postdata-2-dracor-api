@@ -1,9 +1,19 @@
 from util import shorthash
 from poem import Poem
-from sparql import DB
+from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
-from pd_stardog_queries import PoemTitle, PoemCreationYear, PoemAuthorUris
+from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri
 
+# TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
+# The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
+# I tried to remove them with a  wrapper function "__execute_sparql_query" BUT the queries executed with this function
+# are initialized in the function that calls the "__execute_sparql_query" function; whereas the basic metadata queries
+# are instantiated in the __init. So there might be some more tinkering involved.
+# If the query is not instantiated on the class level, we have no chance to use the rich possibilities, e.g call the
+# .explain() method. This is possible with the basic metadata queries, which are available,
+# e.g. poem.sparql_creation_year.explain(); in the case of the "__execute_sparql_query" construct, this doesn't work,
+# because the query "lives" only in the function, e.g. in "get_automatic_scansion_uri" "query". We might need some
+# third (hybrid) variant, that streamlines code, but also allows for exploiting the query's methods.
 
 class PostdataPoem(Poem):
     """POSTDATA Poem
@@ -15,6 +25,7 @@ class PostdataPoem(Poem):
         database (DB): Database connection. Instance of class DB.
         author_uris (list): URIs of authors of a poem.
         authors (list): Instances of class PostdataAuthor.
+        automatic_analysis (dict): Analysis based on an automatic scansion.
     """
 
     # uri of the poem
@@ -37,6 +48,11 @@ class PostdataPoem(Poem):
 
     # Authors
     authors = None
+
+    # Analysis:
+    # TODO: Handle the scansions
+    # Analysis that is based on an AutomaticScansion
+    automatic_analysis = None
 
     def __init__(self, uri: str = None, database: DB = None):
         """Initialize poem
@@ -265,21 +281,6 @@ class PostdataPoem(Poem):
             dict: Basic Metadata on a poem.
         """
 
-        """Example:
-        
-        {
-        'id': 'pd_0360be3e',
-        'uri': 'http://postdata.linhd.uned.es/resource/pw_lope-de-vega_1-al-sujeto-de-la-dama-que-le-dijo-dios-le-provea',
-        'name': 'lope-de-vega_1-al-sujeto-de-la-dama-que-le-dijo-dios-le-provea',
-        'title': '- 1 - Al sujeto de la dama que le dijo «Dios le provea» ',
-        'authors': [{'name': 'Lope de Vega',
-            'uri': 'http://postdata.linhd.uned.es/resource/p_lope-de-vega',
-            'refs': [{'ref': 'Q165257', 'type': 'wikidata'}]}],
-        'source': 'POSTDATA Poetry Lab',
-        'sourceUrl': 'http://poetry.linhd.uned.es:3000/en/author/lope-de-vega/poetic-work/1-al-sujeto-de-la-dama-que-le-dijo-dios-le-provea'
-        }
-        
-        """
         metadata = dict(
             id=self.id,
             uri=self.uri,
@@ -295,3 +296,108 @@ class PostdataPoem(Poem):
                     metadata["authors"].append(author.get_metadata())
 
         return metadata
+
+    # The following methods return results of an automatic analysis of a poem resulting in an automatedScansion
+    # We ignore the manual scansion and focus of the automatic analysis only. The SPARQL Queries are initialized only
+    # when the analysis is run. This is somewhat inconsistent to what is done with the Queries, that return basic
+    # metadata; ideally, we would model the analysis as a separate class "Scansion" (this would be closer to POSTDATAs
+    # approach, but then all the already working queries, that start from a poem URI would have to be re-written. For
+    # the demonstrator, this is not feasible, but might become relevant at some later stage.)
+
+    def __execute_sparql_query(self, sparql_query: PdStardogQuery) -> SparqlResults:
+        """Wrapper for a SPARQL Query.
+
+        This method tries to streamline the process of checking, if a query can be executed and preparing the query.
+
+        Returns:
+            SparqlResults: Results of the SPARQL Query as instance of class "SparqlResults"
+        """
+        if self.database:
+            if self.uri:
+                sparql_query.inject([self.uri])
+            else:
+                raise Exception("No URI of the poem specified. Can not get any attributes.")
+            sparql_query.execute(self.database)
+            return sparql_query.results
+        else:
+            raise Exception("Database Connection not available.")
+
+    def get_automatic_scansion_uri(self) -> str:
+        """URI of an Automatic Scansion.
+
+        Uses a SPARQL Query of class "PoemAutomaticScansionUri" of the module "pd_stardog_queries".
+
+        Returns:
+            str: URI of an automatic scansion.
+        """
+        query = PoemAutomaticScansionUri()
+        results = self.__execute_sparql_query(query)
+        # TODO: make sure, that there is only one URI of an Automatic Scansion. In Theory there could be more, also with
+        # contradicting results
+        return results.simplify()[0]
+
+    def get_analysis(self, scansion_type:str = "automatic"):
+        """Return an automatic analysis of a poem."""
+
+        """
+        Example:
+        
+        {'source': {'uri': 'http://postdata.linhd.uned.es/resource/sc_carlos-mendoza_noviembre_disco2-1_1645475669320137'},
+ 'numOfStanzas': 4,
+ 'numOfLines': 14,
+ 'numOfWords': 87,
+ 'numOfLinesInStanzas': [4, 4, 3, 3],
+ 'rhymeSchemesOfStanzas': ['abba', 'abba', 'a-a', 'a-a'],
+ 'numOfMetricalSyllables': 154,
+ 'numOfGrammaticalSyllables': 166,
+ 'numOfMetricalSyllablesInStanzas': [[11, 11, 11, 11],
+  [11, 11, 11, 11],
+  [11, 11, 11],
+  [11, 11, 11]],
+ 'numOfGrammaticalSyllablesInStanzas': [[12, 12, 13, 12],
+  [12, 11, 11, 11],
+  [11, 11, 12],
+  [12, 13, 13]],
+ 'numOfWordsInStanzas': [[4, 8, 7, 5], [8, 5, 5, 5], [7, 6, 6], [7, 8, 6]],
+ 'grammaticalStressPatternsInStanzas': [['--+---+---+-',
+   '+-+---+-+-+-',
+   '-+-+---+---+-',
+   '-+----+-+-+-'],
+  ['+-+---+---+-', '---+---+-+-', '-+---+---+-', '-+---+---+-'],
+  ['++---+---+-', '-+---+---+-', '+---+-+---+-'],
+  ['-+---++-+-+-', '--+--+-----+-', '+-+---+----+-']],
+ 'metricalPatternsInStanzas': [['--+--+---+-',
+   '+-+--+-+-+-',
+   '+-+--+---+-',
+   '-+---+-+-+-'],
+  ['+-+--+---+-', '---+---+-+-', '-+---+---+-', '-+---+---+-'],
+  ['++---+---+-', '-+---+---+-', '+--+-+---+-'],
+  ['-+--++-+-+-', '--+--+---+-', '+-+--+---+-']]}
+        """
+        if self.automatic_analysis:
+            return self.automatic_analysis
+
+        else:
+
+            source = dict(
+                uri=self.get_automatic_scansion_uri()
+            )
+
+            analysis = dict(
+                source=source
+                # numOfStanzas
+                # numOfLines
+                # numOfWords
+                # numOfLinesInStanzas
+                # rhymeSchemesOfStanzas
+                # numOfMetricalSyllables
+                # numOfGrammaticalSyllables
+                # numOfMetricalSyllablesInStanzas
+                # numOfGrammaticalSyllablesInStanzas
+                # numOfWordsInStanzas
+                # grammaticalStressPatternsInStanzas
+                # metricalPatternsInStanzas
+                )
+            self.automatic_analysis = analysis
+
+            return self.automatic_analysis
