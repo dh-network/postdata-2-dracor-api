@@ -2,7 +2,8 @@ from util import shorthash
 from poem import Poem
 from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
-from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri
+from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri, \
+    PoemCountStanzas
 
 # TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
 # The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
@@ -14,6 +15,7 @@ from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, Poem
 # e.g. poem.sparql_creation_year.explain(); in the case of the "__execute_sparql_query" construct, this doesn't work,
 # because the query "lives" only in the function, e.g. in "get_automatic_scansion_uri" "query". We might need some
 # third (hybrid) variant, that streamlines code, but also allows for exploiting the query's methods.
+
 
 class PostdataPoem(Poem):
     """POSTDATA Poem
@@ -336,6 +338,20 @@ class PostdataPoem(Poem):
         # contradicting results
         return results.simplify()[0]
 
+    def get_number_of_stanzas(self) -> int:
+        """Count Stanzas of a Poem.
+
+        Uses a SPARQL Query of class "PoemCountStanzas" of the module "pd_stardog_queries".
+
+
+        Returns:
+            int: Number of Stanzas
+        """
+        query = PoemCountStanzas()
+        results = self.__execute_sparql_query(query)
+        mapping = {"count": {"datatype": "int"}}
+        return results.simplify(mapping=mapping)[0]
+
     def get_analysis(self, scansion_type:str = "automatic"):
         """Return an automatic analysis of a poem."""
 
@@ -384,8 +400,8 @@ class PostdataPoem(Poem):
             )
 
             analysis = dict(
-                source=source
-                # numOfStanzas
+                source=source,
+                numOfStanzas=self.get_number_of_stanzas(),
                 # numOfLines
                 # numOfWords
                 # numOfLinesInStanzas
