@@ -400,6 +400,42 @@ def get_ids(corpusname: str):
                         mimetype="text/plain")
 
 
+@api.route("/corpora/<path:corpusname>/poems/<path:poem_id>")
+def get_poem_metadata(corpusname: str, poem_id: str):
+    """
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+        poem_id: ID of the poem.
+
+    ---
+    get:
+        summary: Entity IDs
+        description: Returns IDs of entities of a certain "type" in a corpus. Currently, only "poem" is implemented.
+        operationId: get_entity_ids
+        parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
+            -   in: path
+                name: id
+                description: ID of the poem.
+                required: true
+                example: 6a12e7d6
+                schema:
+                    type: string
+        responses:
+            200:
+                description: Succesful.
+    """
+    # TODO: Implement poem-metadata endpoint
+    return f"Metadata for poem {poem_id}. To be implemented."
+
+
 # End of the API Endpoints
 
 # Generate the OpenAPI Specification
