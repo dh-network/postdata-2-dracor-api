@@ -476,6 +476,51 @@ class PoemCountWords(PdStardogQuery):
     ]
 
 
+class PoemCountLinesInStanzas(PdStardogQuery):
+    """SPARQL Query: Count Lines in Stanzas of a Poem"""
+
+    label = "Count Lines in Stanzas of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" get the number of lines in each stanza.
+    """
+
+    """Notes:
+    Originally, the query also returned the Stanza Number to have this information available when sorting. Because
+    we can trust, that the clause "ORDER BY ?StanzaNumber" guarantees the correct order of the values, we changed the 
+    SELECT statement as in the template. The original version of the SELECT was:
+    
+        SELECT ?StanzaNumber (COUNT(?Line) AS ?count) FROM <tag:stardog:api:context:local>
+    
+    """
+
+    template = """
+    SELECT (COUNT(?Line) AS ?count) FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:isRealisedThrough ?Redaction.
+        
+        ?Redaction pdp:wasInputFor ?ScansionProcess.
+        
+        ?ScansionProcess pdp:generated ?Scansion.
+        
+        ?Scansion pdp:typeOfScansion <http://postdata.linhd.uned.es/kos/automaticscansion>;
+            pdp:hasStanza ?Stanza.
+            
+            ?Stanza pdp:stanzaNumber ?StanzaNumber;
+                pdp:hasLine ?Line.
+    }
+    GROUP BY ?StanzaNumber
+    ORDER BY ?StanzaNumber
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
 
 
 

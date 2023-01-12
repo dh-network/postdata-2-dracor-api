@@ -3,7 +3,7 @@ from poem import Poem
 from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
 from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri, \
-    PoemCountStanzas, PoemCountLines, PoemCountWords
+    PoemCountStanzas, PoemCountLines, PoemCountWords, PoemCountLinesInStanzas
 
 # TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
 # The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
@@ -364,6 +364,19 @@ class PostdataPoem(Poem):
         mapping = {"count": {"datatype": "int"}}
         return results.simplify(mapping=mapping)[0]
 
+    def get_number_of_lines_in_stanzas(self) -> list:
+        """Count lines per Stanza
+
+        Uses a SPARQL Query of class "PoemCountLinesInStanzas" of the module "pd_stardog_queries".
+
+        Returns:
+            list: Number of lines for each stanza.
+        """
+        query = PoemCountLinesInStanzas()
+        results = self.__execute_sparql_query(query)
+        mapping = {"count": {"datatype": "int"}}
+        return results.simplify(mapping=mapping)
+
     def get_number_of_words(self) -> int:
         """Count Words of a Poem.
 
@@ -429,7 +442,7 @@ class PostdataPoem(Poem):
                 numOfStanzas=self.get_number_of_stanzas(),
                 numOfLines=self.get_number_of_lines(),
                 numOfWords=self.get_number_of_words(),
-                # numOfLinesInStanzas
+                numOfLinesInStanzas=self.get_number_of_lines_in_stanzas(),
                 # rhymeSchemesOfStanzas
                 # numOfMetricalSyllables
                 # numOfGrammaticalSyllables
