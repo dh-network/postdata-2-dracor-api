@@ -476,6 +476,52 @@ class PoemCountWords(PdStardogQuery):
     ]
 
 
+class PoemCountSyllables(PdStardogQuery):
+    """SPARQL Query: Count Syllables of a Poem"""
+
+    label = "Count Syllables of a Poem"
+
+    description = """
+    For a single poem with a "poem_uri" the number of syllables of a type ("metrical" or 
+    "grammatical") is returned. The syllable type is selected by choosing between the properties by setting the variable
+    "syllable_type_prop":
+     
+    The result is based on an automatic scansion.
+    """
+
+    template = """
+    SELECT (COUNT(?Syllable) AS ?count) FROM <tag:stardog:api:context:local>  WHERE {
+        <$1> pdc:isRealisedThrough ?Redaction .
+    
+        ?Redaction pdp:wasInputFor ?ScansionProcess .
+    
+        ?ScansionProcess pdp:generated ?Scansion .
+    
+        ?Scansion pdp:typeOfScansion <http://postdata.linhd.uned.es/kos/automaticscansion> ;
+              pdp:hasStanza ?Stanza .
+    
+        ?Stanza pdp:stanzaNumber ?StanzaNumber ;
+            pdp:hasLine ?Line .
+    
+        #could be: pdp:hasGrammaticalSyllable or pdp:hasMetricalSyllable
+        ?Line $2 ?Syllable .
+    }
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        },
+        {
+            "id": "syllable_type_prop",
+            "class": "owl:ObjectProperty",
+            "description": "Syllable Type Property"
+        }
+    ]
+
+
 class PoemCountLinesInStanzas(PdStardogQuery):
     """SPARQL Query: Count Lines in Stanzas of a Poem"""
 

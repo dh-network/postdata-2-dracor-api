@@ -3,7 +3,8 @@ from poem import Poem
 from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
 from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri, \
-    PoemCountStanzas, PoemCountLines, PoemCountWords, PoemCountLinesInStanzas, PoemRhymeSchemesOfStanzas
+    PoemCountStanzas, PoemCountLines, PoemCountWords, PoemCountLinesInStanzas, PoemRhymeSchemesOfStanzas, \
+    PoemCountSyllables
 
 # TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
 # The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
@@ -377,6 +378,42 @@ class PostdataPoem(Poem):
         mapping = {"count": {"datatype": "int"}}
         return results.simplify(mapping=mapping)[0]
 
+    def get_number_of_syllables(self, syllable_type: str = "metrical") -> int:
+        """Count Syllables of a Poem.
+
+        Uses a SPARQL Query of class "PoemCountSyllables" of the module "pd_stardog_queries". The query has two
+        variables: The first one is the URI of the poem, the second one must be replaced with the property connecting
+        the line to the count of syllables of a certain type: "pdp:hasMetricalSyllable" or pdp:hasGrammaticalSyllable.
+
+        Args:
+            syllable_type (str): Type of syllable ("grammatical" or "metrical"). Defaults to "metrical".
+
+        Returns:
+            int: Number of metrical syllables.
+
+        """
+        # set the type of syllable by replacing the second variable in the query
+        # can be "pdp:hasGrammaticalSyllable" or "pdp:hasMetricalSyllable"
+        if syllable_type == "metrical":
+            syllable_type_prop = "pdp:hasMetricalSyllable"
+        elif syllable_type == "grammatical":
+            syllable_type_prop = "pdp:hasGrammaticalSyllable"
+        else:
+            raise Exception("Syllable Type is not valid.")
+
+        query = PoemCountSyllables()
+        if self.database:
+            if self.uri:
+                query.inject([self.uri, syllable_type_prop])
+            else:
+                raise Exception("No URI of the poem specified. Can not get any attributes.")
+            query.execute(self.database)
+        else:
+            raise Exception("Database Connection not available.")
+
+        mapping = {"count": {"datatype": "int"}}
+        return query.results.simplify(mapping=mapping)[0]
+
     def get_number_of_lines_in_stanzas(self) -> list:
         """Count lines per Stanza
 
@@ -456,8 +493,8 @@ class PostdataPoem(Poem):
                 numOfWords=self.get_number_of_words(),
                 numOfLinesInStanzas=self.get_number_of_lines_in_stanzas(),
                 rhymeSchemesOfStanzas=self.get_rhyme_schemes_of_stanzas(),
-                # numOfMetricalSyllables
-                # numOfGrammaticalSyllables
+                numOfMetricalSyllables=self.get_number_of_syllables(syllable_type="metrical"),
+                numOfGrammaticalSyllables=self.get_number_of_syllables(syllable_type="grammatical"),
                 # numOfMetricalSyllablesInStanzas
                 # numOfGrammaticalSyllablesInStanzas
                 # numOfWordsInStanzas
