@@ -340,6 +340,7 @@ class PostdataPoem(Poem):
         accessed by taking the value from the field with the key contained in the keyword argument "value_field_key". If
         the value should be cast to an integer, the keyword argument "value_datatype" should be set to "int", in all
         other cases it will be considered a string.
+        It expects that the values/features are ordered by absolute line number.
 
         Args:
             simplified_sparql_results (list): SPARQL result after simplify().
@@ -503,7 +504,7 @@ class PostdataPoem(Poem):
         return results.simplify()
 
     def get_number_of_syllables_in_stanzas(self, syllable_type: str = "metrical") -> list:
-        """Count Syllables in each Stanza
+        """Count Syllables in a Verse Line in each Stanza
 
         Uses a SPARQL Query of class "PoemCountSyllablesInStanzas" of the module "pd_stardog_queries". The query has two
         variables: The first one is the URI of the poem, the second one must be replaced with the property connecting
@@ -543,6 +544,17 @@ class PostdataPoem(Poem):
         )
 
         return values_grouped_by_stanzas
+
+    def get_number_of_words_in_stanzas(self) -> list:
+        """Count Words in a Verse Line in each Stanza
+
+        Uses a SPARQL Query of class "PoemCountWordsInStanzas" of the module "pd_stardog_queries".
+
+        Returns:
+
+        """
+        # TODO: Continue here.
+        pass
 
     def get_analysis(self, scansion_type: str = "automatic"):
         """Return an automatic analysis of a poem."""
