@@ -521,6 +521,41 @@ class PoemCountLinesInStanzas(PdStardogQuery):
     ]
 
 
+class PoemRhymeSchemesOfStanzas(PdStardogQuery):
+    """SPARQL Query: Get Rhyme Scheme for each Stanza"""
+
+    label = "Get Rhyme Scheme for each Stanza"
+
+    description = """
+    For a single poem with a "poem_uri" get the Rhyme Scheme for each stanza.
+    """
+
+    template = """
+    SELECT ?rhymeScheme FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:isRealisedThrough ?Redaction .
+    
+        ?Redaction pdp:wasInputFor ?ScansionProcess .
+    
+        ?ScansionProcess pdp:generated ?Scansion .
+    
+        ?Scansion pdp:typeOfScansion <http://postdata.linhd.uned.es/kos/automaticscansion> ;
+              pdp:hasStanza ?Stanza .
+  
+        ?Stanza pdp:stanzaNumber ?StanzaNo ;
+            pdp:rhymeScheme ?rhymeScheme .
+    }
+    ORDER BY ?StanzaNo
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
 
 
 

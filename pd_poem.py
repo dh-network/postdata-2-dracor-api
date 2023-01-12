@@ -3,7 +3,7 @@ from poem import Poem
 from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
 from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri, \
-    PoemCountStanzas, PoemCountLines, PoemCountWords, PoemCountLinesInStanzas
+    PoemCountStanzas, PoemCountLines, PoemCountWords, PoemCountLinesInStanzas, PoemRhymeSchemesOfStanzas
 
 # TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
 # The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
@@ -364,6 +364,19 @@ class PostdataPoem(Poem):
         mapping = {"count": {"datatype": "int"}}
         return results.simplify(mapping=mapping)[0]
 
+    def get_number_of_words(self) -> int:
+        """Count Words of a Poem.
+
+        Uses a SPARQL Query of class "PoemCountWords" of the module "pd_stardog_queries".
+
+        Returns:
+            int: Number of Words.
+        """
+        query = PoemCountWords()
+        results = self.__execute_sparql_query(query)
+        mapping = {"count": {"datatype": "int"}}
+        return results.simplify(mapping=mapping)[0]
+
     def get_number_of_lines_in_stanzas(self) -> list:
         """Count lines per Stanza
 
@@ -377,18 +390,17 @@ class PostdataPoem(Poem):
         mapping = {"count": {"datatype": "int"}}
         return results.simplify(mapping=mapping)
 
-    def get_number_of_words(self) -> int:
-        """Count Words of a Poem.
+    def get_rhyme_schemes_of_stanzas(self) -> list:
+        """Get Rhyme Scheme per Stanza
 
-        Uses a SPARQL Query of class "PoemCountWords" of the module "pd_stardog_queries".
+        Uses a SPARQL Query of class "PoemRhymeSchemesOfStanzas" of the module "pd_stardog_queries".
 
         Returns:
-            int: Number of Words.
+            list: Number of rhyme scheme for each stanza.
         """
-        query = PoemCountWords()
+        query = PoemRhymeSchemesOfStanzas()
         results = self.__execute_sparql_query(query)
-        mapping = {"count": {"datatype": "int"}}
-        return results.simplify(mapping=mapping)[0]
+        return results.simplify()
 
     def get_analysis(self, scansion_type:str = "automatic"):
         """Return an automatic analysis of a poem."""
@@ -443,7 +455,7 @@ class PostdataPoem(Poem):
                 numOfLines=self.get_number_of_lines(),
                 numOfWords=self.get_number_of_words(),
                 numOfLinesInStanzas=self.get_number_of_lines_in_stanzas(),
-                # rhymeSchemesOfStanzas
+                rhymeSchemesOfStanzas=self.get_rhyme_schemes_of_stanzas(),
                 # numOfMetricalSyllables
                 # numOfGrammaticalSyllables
                 # numOfMetricalSyllablesInStanzas
