@@ -4,7 +4,7 @@ from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
 from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri, \
     PoemCountStanzas, PoemCountLines, PoemCountWords, PoemCountLinesInStanzas, PoemRhymeSchemesOfStanzas, \
-    PoemCountSyllables
+    PoemCountSyllables, PoemCountSyllablesInStanzas
 
 # TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
 # The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
@@ -325,6 +325,69 @@ class PostdataPoem(Poem):
         else:
             raise Exception("Database Connection not available.")
 
+    def __group_feature_by_stanzas(self,
+                                   simplified_sparql_results: list,
+                                   stanza_number_field_key: str = "StanzaNo",
+                                   value_field_key: str = "count",
+                                   value_datatype: str = "int"
+                                   ) -> list:
+        """Group Values/Features by Stanzas.
+
+        This helper method groups features/values retrieved by a SPARQL Query into Stanzas (List of Lists), e.g.
+        "[[11, 11, 11, 11], [11, 11, 11, 11], [11, 11, 11], [11, 11, 11]]". It is expected, that the query returns
+        information on the number of the stanza. A field must be the Stanza Number. The key of this field can be set
+        with the keyword argument "stanza_number_field_key". The value/feature that should be grouped can be
+        accessed by taking the value from the field with the key contained in the keyword argument "value_field_key". If
+        the value should be cast to an integer, the keyword argument "value_datatype" should be set to "int", in all
+        other cases it will be considered a string.
+
+        Args:
+            simplified_sparql_results (list): SPARQL result after simplify().
+            stanza_number_field_key (str): Key of the field containing the Stanza Number. Defaults to "StanzaNo".
+            value_field_key (str): Key of the field that contains the value/the feature.
+            value_datatype (str): Cast value to a datatype. Defaults to "int" for Integer. Everything else will be
+                cast to a string.
+
+        Returns:
+            list: Features grouped into stanzas.
+        """
+        # Sorry, even worse Spaghetti-Code follows from here.
+
+        grouped_results = []
+        stanza = []
+        current_stanza = 0
+
+        for binding in simplified_sparql_results:
+            # print(binding)
+            stanza_number = binding[stanza_number_field_key]
+            # print("Current stanza:" + stanza_number)
+            if value_datatype == "int" or "Integer":
+                value = int(binding[value_field_key])
+            else:
+                value = binding[value_field_key]
+
+            if current_stanza == stanza_number:
+                # print("appending to stanza" + str(value))
+                stanza.append(value)
+            else:
+                # next stanza
+                # print("Next stanza!")
+                if current_stanza > 0:
+                    # this should only by done when we reached stanza two
+                    grouped_results.append(stanza)
+                # set this as current stanza
+                current_stanza = stanza_number
+                # reset the stanza
+                # print("resetting the stanza")
+                stanza = list()
+                # print("appending value to stanza after reset" + str(value))
+                stanza.append(value)
+
+        # append the last stanza
+        grouped_results.append(stanza)
+
+        return grouped_results
+
     def get_automatic_scansion_uri(self) -> str:
         """URI of an Automatic Scansion.
 
@@ -389,7 +452,7 @@ class PostdataPoem(Poem):
             syllable_type (str): Type of syllable ("grammatical" or "metrical"). Defaults to "metrical".
 
         Returns:
-            int: Number of metrical syllables.
+            int: Number of metrical or grammatical syllables.
 
         """
         # set the type of syllable by replacing the second variable in the query
@@ -439,7 +502,49 @@ class PostdataPoem(Poem):
         results = self.__execute_sparql_query(query)
         return results.simplify()
 
-    def get_analysis(self, scansion_type:str = "automatic"):
+    def get_number_of_syllables_in_stanzas(self, syllable_type: str = "metrical") -> list:
+        """Count Syllables in each Stanza
+
+        Uses a SPARQL Query of class "PoemCountSyllablesInStanzas" of the module "pd_stardog_queries". The query has two
+        variables: The first one is the URI of the poem, the second one must be replaced with the property connecting
+        the line to the count of syllables of a certain type: "pdp:hasMetricalSyllable" or pdp:hasGrammaticalSyllable.
+
+        Args:
+            syllable_type (str): Type of syllable ("grammatical" or "metrical"). Defaults to "metrical".
+
+        Returns:
+            list: Number of Syllables per Stanza
+        """
+        # set the type of syllable by replacing the second variable in the query
+        # can be "pdp:hasGrammaticalSyllable" or "pdp:hasMetricalSyllable"
+        if syllable_type == "metrical":
+            syllable_type_prop = "pdp:hasMetricalSyllable"
+        elif syllable_type == "grammatical":
+            syllable_type_prop = "pdp:hasGrammaticalSyllable"
+        else:
+            raise Exception("Syllable Type is not valid.")
+
+        query = PoemCountSyllablesInStanzas()
+        if self.database:
+            if self.uri:
+                query.inject([self.uri, syllable_type_prop])
+            else:
+                raise Exception("No URI of the poem specified. Can not get any attributes.")
+            query.execute(self.database)
+        else:
+            raise Exception("Database Connection not available.")
+
+        # the query returns the counts per line; we group the syllable counts by stanzas
+        values_grouped_by_stanzas = self.__group_feature_by_stanzas(
+            query.results.simplify(),
+            stanza_number_field_key="StanzaNo",
+            value_field_key="count",
+            value_datatype="int"
+        )
+
+        return values_grouped_by_stanzas
+
+    def get_analysis(self, scansion_type: str = "automatic"):
         """Return an automatic analysis of a poem."""
 
         """
@@ -495,8 +600,8 @@ class PostdataPoem(Poem):
                 rhymeSchemesOfStanzas=self.get_rhyme_schemes_of_stanzas(),
                 numOfMetricalSyllables=self.get_number_of_syllables(syllable_type="metrical"),
                 numOfGrammaticalSyllables=self.get_number_of_syllables(syllable_type="grammatical"),
-                # numOfMetricalSyllablesInStanzas
-                # numOfGrammaticalSyllablesInStanzas
+                numOfMetricalSyllablesInStanzas=self.get_number_of_syllables_in_stanzas(syllable_type="metrical"),
+                numOfGrammaticalSyllablesInStanzas=self.get_number_of_syllables_in_stanzas(syllable_type="grammatical"),
                 # numOfWordsInStanzas
                 # grammaticalStressPatternsInStanzas
                 # metricalPatternsInStanzas
