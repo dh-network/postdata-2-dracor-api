@@ -384,7 +384,7 @@ class PostdataPoem(Poem):
             else:
                 # next stanza
                 # print("Next stanza!")
-                if current_stanza > 0:
+                if int(current_stanza) > 0:
                     # this should only by done when we reached stanza two
                     grouped_results.append(stanza)
                 # set this as current stanza

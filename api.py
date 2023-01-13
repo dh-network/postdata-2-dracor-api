@@ -400,13 +400,13 @@ def get_ids(corpusname: str):
                         mimetype="text/plain")
 
 
-@api.route("/corpora/<path:corpusname>/poems/<path:poem_id>")
-def get_poem_metadata(corpusname: str, poem_id: str):
+@api.route("/corpora/<path:corpusname>/poems/<path:id>")
+def get_poem_metadata(corpusname: str, id: str):
     """Get Metadata and Analysis Data of a Poem.
 
     Args:
         corpusname: ID/name of the corpus, e.g. "postdata".
-        poem_id: ID of the poem.
+        id: ID of the poem.
 
     ---
     get:
@@ -431,7 +431,7 @@ def get_poem_metadata(corpusname: str, poem_id: str):
                     type: string
         responses:
             200:
-                description: Succesful.
+                description: Successful.
                 content:
                     application/json:
                         schema: PoemMetadata
@@ -444,16 +444,16 @@ def get_poem_metadata(corpusname: str, poem_id: str):
     """
     if corpusname in corpora.corpora:
         # what will happen, if poem_id doesn't exist?
-        corpora.corpora[corpusname].load_poem(id=poem_id)
+        corpora.corpora[corpusname].load_poem(id=id)
         try:
-            metadata = corpora.corpora[corpusname].poems[poem_id].get_metadata(include_authors=True,
-                                                                               include_analysis=True)
-        # The poem might not exist
+            metadata = corpora.corpora[corpusname].poems[id].get_metadata(include_authors=True, include_analysis=True)
+            # The poem might not exist
         except KeyError:
-            return Response(f"No such poem with ID {poem_id}", status=404,
+            return Response(f"No such poem with ID {id}", status=404,
                             mimetype="text/plain")
-        # Successful, return the metadata:
+            # Successful, return the metadata:
         return jsonify(metadata)
+
     else:
         return Response(f"No such corpus: {corpusname}", status=404,
                         mimetype="text/plain")
