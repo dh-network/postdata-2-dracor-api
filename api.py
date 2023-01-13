@@ -400,6 +400,65 @@ def get_ids(corpusname: str):
                         mimetype="text/plain")
 
 
+@api.route("/corpora/<path:corpusname>/poems/<path:id>")
+def get_poem_metadata(corpusname: str, id: str):
+    """Get Metadata and Analysis Data of a Poem.
+
+    Args:
+        corpusname: ID/name of the corpus, e.g. "postdata".
+        id: ID of the poem.
+
+    ---
+    get:
+        summary: Metadata and Analysis of a Poem
+        description: Get metadata and the analysis of some structural features of a poem. The analysis is based on
+            an automatic scansion. See POSTDATA's tools for more information.
+        operationId: get_poem_metadata
+        parameters:
+            -   in: path
+                name: corpusname
+                description: Name/ID of the corpus.
+                required: true
+                example: postdata
+                schema:
+                    type: string
+            -   in: path
+                name: id
+                description: ID of the poem.
+                required: true
+                example: 6a12e7d6
+                schema:
+                    type: string
+        responses:
+            200:
+                description: Successful.
+                content:
+                    application/json:
+                        schema: PoemMetadata
+            404:
+                description: No such corpus or poem in corpus. Check "corpusname" and/or "poem_id".
+                content:
+                    text/plain:
+                        schema:
+                            type: string
+    """
+    if corpusname in corpora.corpora:
+        # what will happen, if poem_id doesn't exist?
+        corpora.corpora[corpusname].load_poem(id=id)
+        try:
+            metadata = corpora.corpora[corpusname].poems[id].get_metadata(include_authors=True, include_analysis=True)
+            # The poem might not exist
+        except KeyError:
+            return Response(f"No such poem with ID {id}", status=404,
+                            mimetype="text/plain")
+            # Successful, return the metadata:
+        return jsonify(metadata)
+
+    else:
+        return Response(f"No such corpus: {corpusname}", status=404,
+                        mimetype="text/plain")
+
+
 # End of the API Endpoints
 
 # Generate the OpenAPI Specification
@@ -411,6 +470,7 @@ with api.test_request_context():
     spec.path(view=get_corpus_metadata)
     spec.path(view=get_corpus_content)
     spec.path(view=get_ids)
+    spec.path(view=get_poem_metadata)
 
 # write the OpenAPI Specification as YAML to the root folder
 with open('openapi.yaml', 'w') as f:
