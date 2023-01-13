@@ -694,6 +694,45 @@ class PoemCountWordsInStanzas(PdStardogQuery):
     ]
 
 
+class PoemGrammaticalStressPatternsInStanzas(PdStardogQuery):
+    """SPARQL Query: Get the Grammatical Stress Patterns for each Line in a Stanza"""
+
+    label = "Get the Grammatical Stress Patterns for each Line in a Stanza"
+
+    description = """
+        For a single poem with a "poem_uri" the grammatical stress pattern per verse line for each stanza is returned. 
+        The result is based on an automatic scansion.
+        """
+
+    template = """
+    SELECT ?StanzaNumber ?absoluteLineNumber ?grammaticalStressPattern FROM <tag:stardog:api:context:local> WHERE {
+        <$1> pdc:isRealisedThrough ?Redaction .
+    
+    ?Redaction pdp:wasInputFor ?ScansionProcess .
+    
+    ?ScansionProcess pdp:generated ?Scansion .
+    
+    ?Scansion pdp:typeOfScansion <http://postdata.linhd.uned.es/kos/automaticscansion> ;
+              pdp:hasStanza ?Stanza .
+    
+    ?Stanza pdp:stanzaNumber ?StanzaNumber ;
+            pdp:hasLine ?Line .  
+  
+    ?Line pdp:absoluteLineNumber ?absoluteLineNumber ;
+         pdp:grammaticalStressPattern ?grammaticalStressPattern .
+    }
+    ORDER BY ?absoluteLineNumber
+    """
+
+    variables = [
+        {
+            "id": "poem_uri",
+            "class": "pdc:PoeticWork",
+            "description": "URI of a Poem."
+        }
+    ]
+
+
 
 
 

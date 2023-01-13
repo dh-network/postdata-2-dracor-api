@@ -4,7 +4,7 @@ from sparql import DB, SparqlResults
 from pd_author import PostdataAuthor
 from pd_stardog_queries import PdStardogQuery, PoemTitle, PoemCreationYear, PoemAuthorUris, PoemAutomaticScansionUri, \
     PoemCountStanzas, PoemCountLines, PoemCountWords, PoemCountLinesInStanzas, PoemRhymeSchemesOfStanzas, \
-    PoemCountSyllables, PoemCountSyllablesInStanzas, PoemCountWordsInStanzas
+    PoemCountSyllables, PoemCountSyllablesInStanzas, PoemCountWordsInStanzas, PoemGrammaticalStressPatternsInStanzas
 
 # TODO: maybe streamline the SPARQL Query execution of the basic queries as done with get_automatic_scansion_uri
 # The methods returning basic metadata have somewhat redundancies. They all check if db connection is available,...
@@ -362,8 +362,10 @@ class PostdataPoem(Poem):
             # print(binding)
             stanza_number = binding[stanza_number_field_key]
             # print("Current stanza:" + stanza_number)
-            if value_datatype == "int" or "Integer":
+            if value_datatype == "int" or value_datatype == "Integer":
                 value = int(binding[value_field_key])
+            elif value_datatype == "str" or value_datatype == "String":
+                value = str(binding[value_field_key])
             else:
                 value = binding[value_field_key]
 
@@ -574,6 +576,34 @@ class PostdataPoem(Poem):
 
         return values_grouped_by_stanzas
 
+    def get_grammatical_stress_patterns_in_stanzas(self) -> list:
+        """Get the grammatical stress pattern for each verse line grouped into stanzas.
+
+        Uses a SPARQL Query of class "PoemGrammaticalStressPatternsInStanzas" of the module "pd_stardog_queries".
+
+        Returns:
+            list: grammatical stress patterns for each verse line grouped into stanzas.
+        """
+        query = PoemGrammaticalStressPatternsInStanzas()
+        if self.database:
+            if self.uri:
+                query.inject([self.uri])
+            else:
+                raise Exception("No URI of the poem specified. Can not get any attributes.")
+            query.execute(self.database)
+        else:
+            raise Exception("Database Connection not available.")
+
+        # the query returns the counts per line; we group the syllable counts by stanzas
+        values_grouped_by_stanzas = self.__group_feature_by_stanzas(
+            query.results.simplify(),
+            stanza_number_field_key="StanzaNumber",
+            value_field_key="grammaticalStressPattern",
+            value_datatype="str"
+        )
+
+        return values_grouped_by_stanzas
+
     def get_analysis(self, scansion_type: str = "automatic"):
         """Return an automatic analysis of a poem."""
 
@@ -632,8 +662,8 @@ class PostdataPoem(Poem):
                 numOfGrammaticalSyllables=self.get_number_of_syllables(syllable_type="grammatical"),
                 numOfMetricalSyllablesInStanzas=self.get_number_of_syllables_in_stanzas(syllable_type="metrical"),
                 numOfGrammaticalSyllablesInStanzas=self.get_number_of_syllables_in_stanzas(syllable_type="grammatical"),
-                numOfWordsInStanzas=self.get_number_of_words_in_stanzas()
-                # grammaticalStressPatternsInStanzas
+                numOfWordsInStanzas=self.get_number_of_words_in_stanzas(),
+                grammaticalStressPatternsInStanzas=self.get_grammatical_stress_patterns_in_stanzas()
                 # metricalPatternsInStanzas
                 )
             self.automatic_analysis = analysis
