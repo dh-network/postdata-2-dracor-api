@@ -275,14 +275,19 @@ class PostdataPoem(Poem):
             self.authors = None
             return False
 
-    def get_metadata(self, include_authors: bool = False) -> dict:
+    def get_metadata(self, include_authors: bool = False, include_analysis: bool = False) -> dict:
         """Serialize (basic) metadata of a poem.
 
         Request only the necessary attributes of a poem, e.g. to use in an instance
         of "PostdataCorpus" when viewing all poems.
 
+        Args:
+            include_authors (bool): Include author information. Defaults to False.
+            include_analysis (bool): Include the analysis of a poem derived from an automatic scansion.
+                Defaults to False.
+
         Returns:
-            dict: Basic Metadata on a poem.
+            dict: (Basic) Metadata on a poem.
         """
 
         metadata = dict(
@@ -298,6 +303,9 @@ class PostdataPoem(Poem):
                 metadata["authors"] = list()
                 for author in self.authors:
                     metadata["authors"].append(author.get_metadata())
+
+        if include_analysis:
+            metadata["analysis"] = self.get_analysis()
 
         return metadata
 

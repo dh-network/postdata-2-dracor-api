@@ -201,53 +201,147 @@ paths:
             text/plain:
               schema:
                 type: string
+  /corpora/{corpusname}/poems/{poem_id}:
+    get:
+      summary: Metadata and Analysis of a Poem
+      description: Get metadata and the analysis of some structural features of a
+        poem. The analysis is based on an automatic scansion. See POSTDATA's tools
+        for more information.
+      operationId: get_poem_metadata
+      parameters:
+      - in: path
+        name: corpusname
+        description: Name/ID of the corpus.
+        required: true
+        example: postdata
+        schema:
+          type: string
+      - in: path
+        name: id
+        description: ID of the poem.
+        required: true
+        example: 6a12e7d6
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Succesful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoemMetadata'
+        '404':
+          description: No such corpus or poem in corpus. Check "corpusname" and/or
+            "poem_id".
+          content:
+            text/plain:
+              schema:
+                type: string
 openapi: 3.0.3
 components:
   schemas:
     ApiInfo:
       type: object
       properties:
-        description:
-          type: string
         name:
+          type: string
+        description:
           type: string
         version:
           type: string
     CorpusMetrics:
       type: object
       properties:
+        verses:
+          type: integer
         authors:
           type: integer
         grammatical_syllables:
           type: integer
-        words:
-          type: integer
-        verses:
+        metrical_syllables:
           type: integer
         stanzas:
           type: integer
-        poems:
+        words:
           type: integer
-        metrical_syllables:
+        poems:
           type: integer
     CorpusMetadata:
       type: object
       properties:
+        name:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/CorpusMetrics'
         description:
           type: string
         title:
           type: string
-        metrics:
-          $ref: '#/components/schemas/CorpusMetrics'
+    AuthorMetadata:
+      type: object
+      properties:
         name:
           type: string
-    AuthorMetadata:
+        uri:
+          type: string
+    PoemAnalysisSource:
       type: object
       properties:
         uri:
           type: string
-        name:
-          type: string
+    PoemAnalysis:
+      type: object
+      properties:
+        grammaticalStressPatternsInStanzas:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        numOfStanzas:
+          type: integer
+        numOfMetricalSyllables:
+          type: integer
+        metricalPatternsInStanzas:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        numOfGrammaticalSyllables:
+          type: integer
+        numOfLines:
+          type: integer
+        numOfLinesInStanzas:
+          type: array
+          items:
+            type: integer
+        rhymeSchemesOfStanzas:
+          type: array
+          items:
+            type: string
+        numOfMetricalSyllablesInStanzas:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+        source:
+          $ref: '#/components/schemas/PoemAnalysisSource'
+        numOfWordsInStanzas:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+        numOfGrammaticalSyllablesInStanzas:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+        numOfWords:
+          type: integer
     PoemMetadata:
       type: object
       properties:
@@ -259,9 +353,11 @@ components:
             $ref: '#/components/schemas/AuthorMetadata'
         uri:
           type: string
+        analysis:
+          $ref: '#/components/schemas/PoemAnalysis'
         source:
           type: string
-        id:
-          type: string
         name:
+          type: string
+        id:
           type: string

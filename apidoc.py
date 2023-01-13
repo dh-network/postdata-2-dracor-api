@@ -34,6 +34,26 @@ class AuthorMetadata(Schema):
     uri = fields.Str()
 
 
+class PoemAnalysisSource(Schema):
+    uri = fields.Str()
+
+
+class PoemAnalysis(Schema):
+    source = fields.Nested(PoemAnalysisSource)
+    numOfStanzas = fields.Int()
+    numOfLines = fields.Int()
+    numOfWords = fields.Int()
+    numOfLinesInStanzas = fields.List(fields.Int())
+    rhymeSchemesOfStanzas = fields.List(fields.Str())
+    numOfMetricalSyllables = fields.Int()
+    numOfGrammaticalSyllables = fields.Int()
+    numOfMetricalSyllablesInStanzas = fields.List(fields.List(fields.Int()))
+    numOfGrammaticalSyllablesInStanzas = fields.List(fields.List(fields.Int()))
+    numOfWordsInStanzas = fields.List(fields.List(fields.Int()))
+    grammaticalStressPatternsInStanzas = fields.List(fields.List(fields.Str()))
+    metricalPatternsInStanzas = fields.List(fields.List(fields.Str()))
+
+
 class PoemMetadata(Schema):
     id = fields.Str()
     uri = fields.Str()
@@ -41,6 +61,7 @@ class PoemMetadata(Schema):
     source = fields.Str()
     sourceUri = fields.Str()
     authors = fields.List(fields.Nested(AuthorMetadata), required=False)
+    analysis = fields.Nested(PoemAnalysis, required=False)
 
 
 spec = APISpec(
