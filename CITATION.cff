@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "This software is described in the report listed under references. Please cite the report."
+title: "postdata-2-dracor-api: a DraCor-like API to POSTDATA"
+type: software
+authors:
+  - family-names: Börner
+    given-names: Ingo
+    orcid: "https://orcid.org/0000-0001-8294-2541"
+repository-code: "https://github.com/dh-network/postdata-2-dracor-api"
+license: MIT
+date-released: "2023-01-13"
+keywords:
+  - DraCor
+  - POSTDATA
+  - poetry
+  - programmable corpora
+  - Linked Open Data
+  - CLS INFRA
+references:
+  - type: report
+    title: "On Programmable Corpora"
+    authors:
+      - family-names: Börner
+        given-names: Ingo
+        orcid: "https://orcid.org/0000-0001-8294-2541"
+      - family-names: Trilcke
+        given-names: Peer
+        orcid: "https://orcid.org/0000-0002-1421-4320"
+    year: 2023
+    publisher:
+      name: Zenodo
+    doi: "10.5281/zenodo.7664964"
+    notes: "CLS INFRA D7.1"
