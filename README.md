@@ -1,5 +1,7 @@
 # postdata-2-dracor-api
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24274974.svg)](https://doi.org/10.5281/zenodo.24274974)
+
 A prototype of a DraCor-like API to the data of the [POSTDATA](https://postdata.linhd.uned.es) project (Poetry Standardization and Linked Open Data, ERC Starting Grant 2015, grant agreement No. 679528; LINHD, UNED Madrid).
 
 > **Archived.** This repository is no longer maintained. It is kept as it was at the time of the report that describes it.
@@ -30,7 +32,7 @@ Related POSTDATA repositories:
 
 ## Citation
 
-When referring to this work, please cite the report (DOI above); see also `CITATION.cff`. The software itself is archived on Zenodo (see the DOI in the repository description and the release `2026-11-16-archive`).
+When referring to this work, please cite the report (DOI above); see also `CITATION.cff`. The software itself is archived on Zenodo: https://doi.org/10.5281/zenodo.24274974 (all versions; the release `2026-11-16-archive` is the archived state).
 
 ## Licence
 
